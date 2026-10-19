@@ -25,16 +25,16 @@ const camera=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,.1,100); came
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.72; stage.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0xb8aeb8,0.78)); const key=new THREE.DirectionalLight(0xffffff,0.85);key.position.set(2,4,4);scene.add(key);const fill=new THREE.DirectionalLight(0xffe5f0,.22);fill.position.set(-3,2,1);scene.add(fill);const rim=new THREE.DirectionalLight(0xffffff,.18);rim.position.set(0,3,-3);scene.add(rim);
 // A very soft floorless white studio: no furniture or scenery.
-let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={};
+let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=2, reactionMood='idle';
 const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
-function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;}
+function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;reactionMood=newMood;reactionTime=0;}
 const actions={
- compliment(){setLine('¡N-no digas esas cosas tan de repente! ...Aunque, si vas a insistir, podés decirlo otra vez. 💗',5,'shy')},
- tease(){setLine('¿Te parece divertido hacerme sonrojar? ¡Sos imposible! ...No dije que te detuvieras.',3,'shy')},
- tea(){setLine('Te preparé té. No porque me preocupe por vos, ¿eh? Simplemente hice una taza de más.',4,'soft')},
- flower(){setLine('¿Una flor para mí...? Hmph. La voy a aceptar para que no se marchite. Gracias… 🌸',6,'shy')},
- look(){setLine('¿Q-qué? ¿Tengo algo en la cara? Dejá de mirarme así… aunque podés quedarte un ratito.',1,'tsun')},
- letter(){setLine('¿Una carta? La leeré cuando no estés mirando. Y ni se te ocurra esperar una respuesta bonita…',4,'soft')}
+ compliment(){setLine('¡N-no digas esas cosas tan de repente! ...Aunque, si vas a insistir, podés decirlo otra vez. 💗',5,'compliment')},
+ tease(){setLine('¿Te parece divertido hacerme sonrojar? ¡Sos imposible! ...No dije que te detuvieras.',3,'tease')},
+ tea(){setLine('Te preparé té. No porque me preocupe por vos, ¿eh? Simplemente hice una taza de más.',4,'tea')},
+ flower(){setLine('¿Una flor para mí...? Hmph. La voy a aceptar para que no se marchite. Gracias… 🌸',6,'flower')},
+ look(){setLine('¿Q-qué? ¿Tengo algo en la cara? Dejá de mirarme así… aunque podés quedarte un ratito.',1,'look')},
+ letter(){setLine('¿Una carta? La leeré cuando no estés mirando. Y ni se te ocurra esperar una respuesta bonita…',4,'letter')}
 };
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{actions[b.dataset.action]?.();}));
 function setExpr(name,value){if(vrm?.expressionManager){try{vrm.expressionManager.setValue(name,value)}catch(e){}}}
@@ -83,15 +83,53 @@ fileInput.addEventListener('change',async e=>{
 const modelURL=new URL('Frii-vrm1.0.vrm',window.location.href).href;
 installVRMFromURL(modelURL);
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;targetYaw+=(e.clientX-lastX)*.008;lastX=e.clientX;lastY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);renderer.domElement.addEventListener('wheel',e=>{targetZoom=THREE.MathUtils.clamp(targetZoom+e.deltaY*.003,1.7,8)},{passive:true});let pinchStart=0;renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);targetZoom=THREE.MathUtils.clamp(targetZoom+(pinchStart-d)*.01,1.7,8);pinchStart=d}},{passive:true});
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;if(vrm){currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;vrm.scene.position.y=Math.sin(t*1.2)*.012; // movimiento corporal muy sutil, combinado con respiración del torso
-if(vrm.humanoid){const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');const chestBase=animatedBase.chest||animatedBase.spine;if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.05)*.018;chest.rotation.z+=Math.sin(t*.52)*.009;}const head=vrm.humanoid.getNormalizedBoneNode('head');if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.62)*.026;head.rotation.y+=Math.sin(t*.38)*.032;head.rotation.z+=Math.sin(t*.68)*.018;}}
-nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.5+Math.random()*3.5}if(blink>0){blink+=dt*5;if(blink>1)blink=0}const faceMood=mood==='shy'?{happy:.15,relaxed:.12,angry:.0}:{happy:mood==='soft'?.12:0,relaxed:mood==='soft'?.16:0,angry:mood==='tsun'?.12:0};for(const n of ['happy','relaxed','angry'])smoothExpr(n,faceMood[n]||0,dt);smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}vrm.update(dt);
-// Aplicar los offsets tras vrm.update para que la pose no sea sobrescrita.
-if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.43+Math.sin(t*0.7)*0.012;poseBones.leftArm.rotation.x+=0.025+Math.sin(t*0.9)*0.006;}
-if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.43+Math.sin(t*0.7)*0.012;poseBones.rightArm.rotation.x+=0.025+Math.sin(t*0.9)*0.006;}
-if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=0.36;}
-if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=0.36;}
-}camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)}animate();
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(vrm){
+  currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;
+  // Idle motion is deliberately subtle, but visible: breathing + a slow weight shift.
+  vrm.scene.position.y=Math.sin(t*1.15)*.008;vrm.scene.position.x=Math.sin(t*.48)*.006;
+  reactionTime=Math.min(reactionTime+dt,2.6);
+  const duration=2.35, u=Math.min(reactionTime/duration,1);
+  // Smooth rise and fall; keeps reactions visible for longer than a quick twitch.
+  const reactionFade=u<1?Math.sin(u*Math.PI):0;
+  const moodNow=reactionMood;
+  let headX=0,headY=0,headZ=0,chestX=0,chestZ=0,leftArmX=0,rightArmX=0,leftArmZ=0,rightArmZ=0,leftElbowZ=0,rightElbowZ=0;
+  if(moodNow==='tease') { headZ=-.22*reactionFade;headY=-.10*reactionFade;chestZ=-.045*reactionFade;rightArmX=-.18*reactionFade;rightArmZ=-.20*reactionFade;rightElbowZ=-.24*reactionFade; }
+  else if(moodNow==='compliment') { headZ=.19*reactionFade;headX=-.06*reactionFade;chestX=-.035*reactionFade;leftArmZ=-.09*reactionFade;rightArmZ=.09*reactionFade; }
+  else if(moodNow==='tea') { headX=.13*reactionFade;chestX=-.09*reactionFade;leftArmX=-.12*reactionFade;rightArmX=-.12*reactionFade;leftElbowZ=-.12*reactionFade;rightElbowZ=.12*reactionFade; }
+  else if(moodNow==='flower') { headZ=.24*reactionFade;headX=-.04*reactionFade;chestX=-.06*reactionFade;leftArmZ=.12*reactionFade;rightArmZ=-.12*reactionFade;leftElbowZ=.14*reactionFade;rightElbowZ=-.14*reactionFade; }
+  else if(moodNow==='look') { headZ=-.13*reactionFade;headY=.12*reactionFade;chestZ=.035*reactionFade; }
+  else if(moodNow==='letter') { headX=.16*reactionFade;headZ=-.12*reactionFade;chestX=-.055*reactionFade;leftArmZ=-.08*reactionFade;rightArmZ=.08*reactionFade; }
+  else if(moodNow==='soft') { headX=.10*reactionFade;chestX=-.05*reactionFade; }
+  if(vrm.humanoid){
+   const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
+   const chestBase=animatedBase.chest||animatedBase.spine;
+   if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.35)*.035+chestX;chest.rotation.z+=Math.sin(t*.62)*.018+chestZ;}
+   const spine=vrm.humanoid.getNormalizedBoneNode('spine');
+   if(spine&&animatedBase.spine&&spine!==chest){spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.35)*.014+chestX*.35;}
+   const head=vrm.humanoid.getNormalizedBoneNode('head');
+   if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.72)*.028+headX;head.rotation.y+=Math.sin(t*.43)*.035+headY;head.rotation.z+=Math.sin(t*.61)*.022+headZ;}
+  }
+  nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.1+Math.random()*2.7}if(blink>0){blink+=dt*5.5;if(blink>1)blink=0}
+  const faceMood={happy:0,relaxed:0,angry:0};
+  if(['shy','compliment','tease','flower'].includes(mood)){faceMood.happy=.18;faceMood.relaxed=.10;}
+  if(['soft','tea','letter'].includes(mood)){faceMood.happy=.10;faceMood.relaxed=.18;}
+  if(['tsun','look'].includes(mood)){faceMood.angry=.10;}
+  for(const n of ['happy','relaxed','angry'])smoothExpr(n,faceMood[n]||0,dt);
+  smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);
+  if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}
+  vrm.update(dt);
+  // Apply the resting arm pose after vrm.update, then layer a clearly visible gesture.
+  if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.43+Math.sin(t*.7)*.012+leftArmZ;poseBones.leftArm.rotation.x+=.025+Math.sin(t*.9)*.008+leftArmX;}
+  if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.43+Math.sin(t*.7)*.012+rightArmZ;poseBones.rightArm.rotation.x+=.025+Math.sin(t*.9)*.008+rightArmX;}
+  if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=.36+leftElbowZ;}
+  if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=.36+rightElbowZ;}
+ }
+ camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)
+}
+animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
