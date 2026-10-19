@@ -58,10 +58,14 @@ async function installVRMFromURL(url){
    // Guardamos una pose de reposo para aplicarla después de cada actualización del VRM.
    // Esto no modifica el archivo .vrm; solo afecta a esta sesión de la página.
    poseBones={
+     leftShoulder:vrm.humanoid?.getRawBoneNode('leftShoulder'),
+     rightShoulder:vrm.humanoid?.getRawBoneNode('rightShoulder'),
      leftArm:vrm.humanoid?.getRawBoneNode('leftUpperArm'),
      rightArm:vrm.humanoid?.getRawBoneNode('rightUpperArm'),
      leftElbow:vrm.humanoid?.getRawBoneNode('leftLowerArm'),
-     rightElbow:vrm.humanoid?.getRawBoneNode('rightLowerArm')
+     rightElbow:vrm.humanoid?.getRawBoneNode('rightLowerArm'),
+     leftWrist:vrm.humanoid?.getRawBoneNode('leftHand'),
+     rightWrist:vrm.humanoid?.getRawBoneNode('rightHand')
    };
    poseBase={}; animatedBase={};
    for(const [name,bone] of Object.entries(poseBones)) if(bone) poseBase[name]=bone.rotation.clone();
@@ -97,13 +101,13 @@ function animate(){
   const fall=1-THREE.MathUtils.smoothstep(reactionTime,1.65,3.65);
   const reactionFade=Math.max(0,rise*fall);
   const moodNow=reactionMood;
-  let headX=0,headY=0,headZ=0,chestX=0,chestZ=0,leftArmX=0,rightArmX=0,leftArmZ=0,rightArmZ=0,leftElbowZ=0,rightElbowZ=0;
-  if(moodNow==='tease') { headZ=-.28*reactionFade;headY=-.13*reactionFade;chestZ=-.055*reactionFade;chestX=-.025*reactionFade;rightArmX=-.22*reactionFade;rightArmZ=-.27*reactionFade;rightElbowZ=-.34*reactionFade; }
-  else if(moodNow==='compliment') { headZ=.22*reactionFade;headX=-.07*reactionFade;chestX=-.045*reactionFade;leftArmZ=-.13*reactionFade;rightArmZ=.13*reactionFade;leftElbowZ=-.08*reactionFade;rightElbowZ=.08*reactionFade; }
-  else if(moodNow==='tea') { headX=.16*reactionFade;headZ=.05*reactionFade;chestX=-.11*reactionFade;leftArmX=-.16*reactionFade;rightArmX=-.16*reactionFade;leftArmZ=-.10*reactionFade;rightArmZ=.10*reactionFade;leftElbowZ=-.17*reactionFade;rightElbowZ=.17*reactionFade; }
-  else if(moodNow==='flower') { headZ=.27*reactionFade;headX=-.05*reactionFade;chestX=-.07*reactionFade;leftArmZ=.17*reactionFade;rightArmZ=-.17*reactionFade;leftElbowZ=.19*reactionFade;rightElbowZ=-.19*reactionFade; }
-  else if(moodNow==='look') { headZ=-.18*reactionFade;headY=.16*reactionFade;chestZ=.045*reactionFade;rightArmZ=-.06*reactionFade;leftArmZ=.06*reactionFade; }
-  else if(moodNow==='letter') { headX=.20*reactionFade;headZ=-.15*reactionFade;chestX=-.075*reactionFade;leftArmX=-.10*reactionFade;rightArmX=-.10*reactionFade;leftArmZ=-.12*reactionFade;rightArmZ=.12*reactionFade;leftElbowZ=-.12*reactionFade;rightElbowZ=.12*reactionFade; }
+  let headX=0,headY=0,headZ=0,chestX=0,chestZ=0,leftShoulderX=0,rightShoulderX=0,leftShoulderZ=0,rightShoulderZ=0,leftArmX=0,rightArmX=0,leftArmZ=0,rightArmZ=0,leftElbowX=0,rightElbowX=0,leftElbowZ=0,rightElbowZ=0,leftHandZ=0,rightHandZ=0;
+  if(moodNow==='tease') { headZ=-.28*reactionFade;headY=-.13*reactionFade;chestZ=-.055*reactionFade;chestX=-.025*reactionFade;rightShoulderX=-.12*reactionFade;rightShoulderZ=-.12*reactionFade;rightArmX=-.22*reactionFade;rightArmZ=-.27*reactionFade;rightElbowX=-.10*reactionFade;rightElbowZ=-.34*reactionFade;rightHandZ=-.12*reactionFade; }
+  else if(moodNow==='compliment') { headZ=.22*reactionFade;headX=-.07*reactionFade;chestX=-.045*reactionFade;leftShoulderZ=-.08*reactionFade;rightShoulderZ=.08*reactionFade;leftArmZ=-.13*reactionFade;rightArmZ=.13*reactionFade;leftElbowZ=-.08*reactionFade;rightElbowZ=.08*reactionFade;leftHandZ=.08*reactionFade;rightHandZ=-.08*reactionFade; }
+  else if(moodNow==='tea') { headX=.16*reactionFade;headZ=.05*reactionFade;chestX=-.11*reactionFade;leftShoulderX=-.10*reactionFade;rightShoulderX=-.10*reactionFade;leftShoulderZ=-.08*reactionFade;rightShoulderZ=.08*reactionFade;leftArmX=-.16*reactionFade;rightArmX=-.16*reactionFade;leftArmZ=-.10*reactionFade;rightArmZ=.10*reactionFade;leftElbowX=-.08*reactionFade;rightElbowX=-.08*reactionFade;leftElbowZ=-.17*reactionFade;rightElbowZ=.17*reactionFade;leftHandZ=.08*reactionFade;rightHandZ=-.08*reactionFade; }
+  else if(moodNow==='flower') { headZ=.27*reactionFade;headX=-.05*reactionFade;chestX=-.07*reactionFade;leftShoulderZ=.12*reactionFade;rightShoulderZ=-.12*reactionFade;leftArmZ=.17*reactionFade;rightArmZ=-.17*reactionFade;leftElbowX=-.08*reactionFade;rightElbowX=-.08*reactionFade;leftElbowZ=.19*reactionFade;rightElbowZ=-.19*reactionFade;leftHandZ=.12*reactionFade;rightHandZ=-.12*reactionFade; }
+  else if(moodNow==='look') { headZ=-.18*reactionFade;headY=.16*reactionFade;chestZ=.045*reactionFade;rightShoulderZ=-.045*reactionFade;leftShoulderZ=.045*reactionFade;rightArmZ=-.06*reactionFade;leftArmZ=.06*reactionFade; }
+  else if(moodNow==='letter') { headX=.20*reactionFade;headZ=-.15*reactionFade;chestX=-.075*reactionFade;leftShoulderX=-.07*reactionFade;rightShoulderX=-.07*reactionFade;leftShoulderZ=-.08*reactionFade;rightShoulderZ=.08*reactionFade;leftArmX=-.10*reactionFade;rightArmX=-.10*reactionFade;leftArmZ=-.12*reactionFade;rightArmZ=.12*reactionFade;leftElbowX=-.06*reactionFade;rightElbowX=-.06*reactionFade;leftElbowZ=-.12*reactionFade;rightElbowZ=.12*reactionFade;leftHandZ=.06*reactionFade;rightHandZ=-.06*reactionFade; }
   else if(moodNow==='soft') { headX=.10*reactionFade;chestX=-.05*reactionFade; }
   if(vrm.humanoid){
    const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
@@ -123,11 +127,16 @@ function animate(){
   smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);
   if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}
   vrm.update(dt);
-  // Apply the resting arm pose after vrm.update, then layer a clearly visible gesture.
-  if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.43+Math.sin(t*.7)*.012+leftArmZ;poseBones.leftArm.rotation.x+=.025+Math.sin(t*.9)*.008+leftArmX;}
-  if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.43+Math.sin(t*.7)*.012+rightArmZ;poseBones.rightArm.rotation.x+=.025+Math.sin(t*.9)*.008+rightArmX;}
-  if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=.36+leftElbowZ;}
-  if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=.36+rightElbowZ;}
+  // Pose de reposo articulada: hombros, brazos, codos y manos se animan por separado.
+  // Los cambios son aditivos sobre la pose original del VRM; el archivo del modelo no se modifica.
+  if(poseBones.leftShoulder&&poseBase.leftShoulder){poseBones.leftShoulder.rotation.copy(poseBase.leftShoulder);poseBones.leftShoulder.rotation.z-=.055+Math.sin(t*.72)*.012+leftShoulderZ;poseBones.leftShoulder.rotation.x+=Math.sin(t*.9)*.008+leftShoulderX;}
+  if(poseBones.rightShoulder&&poseBase.rightShoulder){poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z+=.055+Math.sin(t*.72)*.012+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.9)*.008+rightShoulderX;}
+  if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.43+Math.sin(t*.7)*.018+leftArmZ;poseBones.leftArm.rotation.x+=.025+Math.sin(t*.9)*.012+leftArmX;}
+  if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.43+Math.sin(t*.7)*.018+rightArmZ;poseBones.rightArm.rotation.x+=.025+Math.sin(t*.9)*.012+rightArmX;}
+  if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=leftElbowX;poseBones.leftElbow.rotation.z-=.36+Math.sin(t*.8)*.012+leftElbowZ;}
+  if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=rightElbowX;poseBones.rightElbow.rotation.z+=.36+Math.sin(t*.8)*.012+rightElbowZ;}
+  if(poseBones.leftWrist&&poseBase.leftWrist){poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=leftHandZ;}
+  if(poseBones.rightWrist&&poseBase.rightWrist){poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z+=rightHandZ;}
  }
  camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)
 }
