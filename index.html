@@ -11,7 +11,7 @@
 </head>
 <body>
 <div id="stage"></div>
-<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>PROTOTIPO 3D · POSTURA Y ANIMACIÓN SUAVE</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
+<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>PROTOTIPO 3D · REACCIONES TSUNDERE</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
 <div class="hint">Arrastrá para girar la cámara · Pellizcá para acercar</div>
 <div class="bottom"><div class="dialog"><div class="name">EVA</div><div class="line" id="line">¿Q-qué mirás tanto? No es como si hubiera preparado este lugar para vos...</div><div class="status" id="status">Cargá tu modelo VRM para comenzar.</div></div><div class="buttons"><button data-action="compliment">💗 Elogiarla</button><button data-action="tease">😏 Coquetear</button><button data-action="tea">🍵 Ofrecer té</button><button data-action="flower">🌸 Ofrecer flor</button><button data-action="look">👀 Mirarla</button><button data-action="letter">💌 Carta</button></div></div>
 <div class="loader" id="loader"><div class="loadcard"><h1>Eva está llegando 🤍</h1><p>Fondo blanco limpio. Estoy cargando el modelo 3D automáticamente desde este sitio; no hace falta elegir ningún archivo.</p><label class="filebtn">Si no carga, podés intentar elegir el archivo VRM manualmente: <input id="vrmfile" type="file" accept=".vrm,model/gltf-binary"></label><p class="tiny">Necesita conexión a internet. Dejá esta página abierta unos segundos mientras carga el modelo.</p></div></div>
@@ -25,7 +25,7 @@ const camera=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,.1,100); came
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.72; stage.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0xb8aeb8,0.78)); const key=new THREE.DirectionalLight(0xffffff,0.85);key.position.set(2,4,4);scene.add(key);const fill=new THREE.DirectionalLight(0xffe5f0,.22);fill.position.set(-3,2,1);scene.add(fill);const rim=new THREE.DirectionalLight(0xffffff,.18);rim.position.set(0,3,-3);scene.add(rim);
 // A very soft floorless white studio: no furniture or scenery.
-let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=2, reactionMood='idle';
+let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=4, reactionMood='idle', modelBaseY=0, modelBaseX=0;
 const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
 function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;reactionMood=newMood;reactionTime=0;}
 const actions={
@@ -51,6 +51,7 @@ async function installVRMFromURL(url){
    VRMUtils.rotateVRM0(vrm);scene.add(vrm.scene);vrm.scene.position.set(0,0,0);vrm.scene.rotation.y=Math.PI;
    const box=new THREE.Box3().setFromObject(vrm.scene), size=box.getSize(new THREE.Vector3());
    vrm.scene.position.y-=box.min.y;
+   modelBaseY=vrm.scene.position.y;modelBaseX=vrm.scene.position.x;
    const h=Math.max(size.y,1.4);
    // Encuadre de cuerpo completo: más distancia y un punto de mirada ligeramente elevado.
    camera.position.set(0,h*.50,Math.max(3.5,h*2.65));camera.lookAt(0,h*.48,0);zoom=camera.position.z;targetZoom=zoom;
@@ -89,34 +90,35 @@ function animate(){
  if(vrm){
   currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;
   // Idle motion is deliberately subtle, but visible: breathing + a slow weight shift.
-  vrm.scene.position.y=Math.sin(t*1.15)*.008;vrm.scene.position.x=Math.sin(t*.48)*.006;
-  reactionTime=Math.min(reactionTime+dt,2.6);
-  const duration=2.35, u=Math.min(reactionTime/duration,1);
-  // Smooth rise and fall; keeps reactions visible for longer than a quick twitch.
-  const reactionFade=u<1?Math.sin(u*Math.PI):0;
+  vrm.scene.position.y=modelBaseY+Math.sin(t*1.55)*.012;vrm.scene.position.x=modelBaseX+Math.sin(t*.62)*.009;
+  reactionTime=Math.min(reactionTime+dt,4.2);
+  // Each button reaction has a clear entrance, a short readable hold, and a gentle release.
+  const rise=THREE.MathUtils.smoothstep(reactionTime,0.04,0.42);
+  const fall=1-THREE.MathUtils.smoothstep(reactionTime,1.65,3.65);
+  const reactionFade=Math.max(0,rise*fall);
   const moodNow=reactionMood;
   let headX=0,headY=0,headZ=0,chestX=0,chestZ=0,leftArmX=0,rightArmX=0,leftArmZ=0,rightArmZ=0,leftElbowZ=0,rightElbowZ=0;
-  if(moodNow==='tease') { headZ=-.22*reactionFade;headY=-.10*reactionFade;chestZ=-.045*reactionFade;rightArmX=-.18*reactionFade;rightArmZ=-.20*reactionFade;rightElbowZ=-.24*reactionFade; }
-  else if(moodNow==='compliment') { headZ=.19*reactionFade;headX=-.06*reactionFade;chestX=-.035*reactionFade;leftArmZ=-.09*reactionFade;rightArmZ=.09*reactionFade; }
-  else if(moodNow==='tea') { headX=.13*reactionFade;chestX=-.09*reactionFade;leftArmX=-.12*reactionFade;rightArmX=-.12*reactionFade;leftElbowZ=-.12*reactionFade;rightElbowZ=.12*reactionFade; }
-  else if(moodNow==='flower') { headZ=.24*reactionFade;headX=-.04*reactionFade;chestX=-.06*reactionFade;leftArmZ=.12*reactionFade;rightArmZ=-.12*reactionFade;leftElbowZ=.14*reactionFade;rightElbowZ=-.14*reactionFade; }
-  else if(moodNow==='look') { headZ=-.13*reactionFade;headY=.12*reactionFade;chestZ=.035*reactionFade; }
-  else if(moodNow==='letter') { headX=.16*reactionFade;headZ=-.12*reactionFade;chestX=-.055*reactionFade;leftArmZ=-.08*reactionFade;rightArmZ=.08*reactionFade; }
+  if(moodNow==='tease') { headZ=-.28*reactionFade;headY=-.13*reactionFade;chestZ=-.055*reactionFade;chestX=-.025*reactionFade;rightArmX=-.22*reactionFade;rightArmZ=-.27*reactionFade;rightElbowZ=-.34*reactionFade; }
+  else if(moodNow==='compliment') { headZ=.22*reactionFade;headX=-.07*reactionFade;chestX=-.045*reactionFade;leftArmZ=-.13*reactionFade;rightArmZ=.13*reactionFade;leftElbowZ=-.08*reactionFade;rightElbowZ=.08*reactionFade; }
+  else if(moodNow==='tea') { headX=.16*reactionFade;headZ=.05*reactionFade;chestX=-.11*reactionFade;leftArmX=-.16*reactionFade;rightArmX=-.16*reactionFade;leftArmZ=-.10*reactionFade;rightArmZ=.10*reactionFade;leftElbowZ=-.17*reactionFade;rightElbowZ=.17*reactionFade; }
+  else if(moodNow==='flower') { headZ=.27*reactionFade;headX=-.05*reactionFade;chestX=-.07*reactionFade;leftArmZ=.17*reactionFade;rightArmZ=-.17*reactionFade;leftElbowZ=.19*reactionFade;rightElbowZ=-.19*reactionFade; }
+  else if(moodNow==='look') { headZ=-.18*reactionFade;headY=.16*reactionFade;chestZ=.045*reactionFade;rightArmZ=-.06*reactionFade;leftArmZ=.06*reactionFade; }
+  else if(moodNow==='letter') { headX=.20*reactionFade;headZ=-.15*reactionFade;chestX=-.075*reactionFade;leftArmX=-.10*reactionFade;rightArmX=-.10*reactionFade;leftArmZ=-.12*reactionFade;rightArmZ=.12*reactionFade;leftElbowZ=-.12*reactionFade;rightElbowZ=.12*reactionFade; }
   else if(moodNow==='soft') { headX=.10*reactionFade;chestX=-.05*reactionFade; }
   if(vrm.humanoid){
    const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
    const chestBase=animatedBase.chest||animatedBase.spine;
-   if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.35)*.035+chestX;chest.rotation.z+=Math.sin(t*.62)*.018+chestZ;}
+   if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.55)*.045+chestX;chest.rotation.z+=Math.sin(t*.72)*.024+chestZ;}
    const spine=vrm.humanoid.getNormalizedBoneNode('spine');
-   if(spine&&animatedBase.spine&&spine!==chest){spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.35)*.014+chestX*.35;}
+   if(spine&&animatedBase.spine&&spine!==chest){spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.55)*.022+chestX*.35;spine.rotation.z+=Math.sin(t*.62)*.009+chestZ*.3;}
    const head=vrm.humanoid.getNormalizedBoneNode('head');
-   if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.72)*.028+headX;head.rotation.y+=Math.sin(t*.43)*.035+headY;head.rotation.z+=Math.sin(t*.61)*.022+headZ;}
+   if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.82)*.035+headX;head.rotation.y+=Math.sin(t*.57)*.045+headY;head.rotation.z+=Math.sin(t*.68)*.028+headZ;}
   }
   nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.1+Math.random()*2.7}if(blink>0){blink+=dt*5.5;if(blink>1)blink=0}
   const faceMood={happy:0,relaxed:0,angry:0};
-  if(['shy','compliment','tease','flower'].includes(mood)){faceMood.happy=.18;faceMood.relaxed=.10;}
-  if(['soft','tea','letter'].includes(mood)){faceMood.happy=.10;faceMood.relaxed=.18;}
-  if(['tsun','look'].includes(mood)){faceMood.angry=.10;}
+  if(['shy','compliment','tease','flower'].includes(mood)){faceMood.happy=mood==='tease'?.24:.20;faceMood.relaxed=.12;}
+  if(['soft','tea','letter'].includes(mood)){faceMood.happy=.13;faceMood.relaxed=.20;}
+  if(['tsun','look'].includes(mood)){faceMood.angry=.12;}
   for(const n of ['happy','relaxed','angry'])smoothExpr(n,faceMood[n]||0,dt);
   smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);
   if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}
