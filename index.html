@@ -25,7 +25,7 @@ const camera=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,.1,100); came
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.72; stage.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0xb8aeb8,0.78)); const key=new THREE.DirectionalLight(0xffffff,0.85);key.position.set(2,4,4);scene.add(key);const fill=new THREE.DirectionalLight(0xffe5f0,.22);fill.position.set(-3,2,1);scene.add(fill);const rim=new THREE.DirectionalLight(0xffffff,.18);rim.position.set(0,3,-3);scene.add(rim);
 // A very soft floorless white studio: no furniture or scenery.
-let vrm=null, mixer=null, poseBones={}, poseBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={};
+let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=3.8, targetZoom=3.8, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={};
 const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
 function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;}
 const actions={
@@ -53,7 +53,7 @@ async function installVRMFromURL(url){
    vrm.scene.position.y-=box.min.y;
    const h=Math.max(size.y,1.4);
    // Encuadre de cuerpo completo: más distancia y un punto de mirada ligeramente elevado.
-   camera.position.set(0,h*.52,Math.max(3.2,h*2.45));camera.lookAt(0,h*.50,0);zoom=camera.position.z;targetZoom=zoom;
+   camera.position.set(0,h*.50,Math.max(3.5,h*2.65));camera.lookAt(0,h*.48,0);zoom=camera.position.z;targetZoom=zoom;
    // Guardamos una pose de reposo para aplicarla después de cada actualización del VRM.
    // Esto no modifica el archivo .vrm; solo afecta a esta sesión de la página.
    poseBones={
@@ -62,8 +62,9 @@ async function installVRMFromURL(url){
      leftElbow:vrm.humanoid?.getRawBoneNode('leftLowerArm'),
      rightElbow:vrm.humanoid?.getRawBoneNode('rightLowerArm')
    };
-   poseBase={};
+   poseBase={}; animatedBase={};
    for(const [name,bone] of Object.entries(poseBones)) if(bone) poseBase[name]=bone.rotation.clone();
+   for(const name of ['chest','spine','head']) { const bone=vrm.humanoid?.getNormalizedBoneNode(name); if(bone) animatedBase[name]=bone.rotation.clone(); }
    status.textContent='¡Eva está aquí! Modelo 3D cargado.';
    loaderScreen.classList.add('hidden');
  }catch(err){
@@ -82,14 +83,14 @@ fileInput.addEventListener('change',async e=>{
 const modelURL=new URL('Frii-vrm1.0.vrm',window.location.href).href;
 installVRMFromURL(modelURL);
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;targetYaw+=(e.clientX-lastX)*.008;lastX=e.clientX;lastY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);renderer.domElement.addEventListener('wheel',e=>{targetZoom=THREE.MathUtils.clamp(targetZoom+e.deltaY*.003,1.7,8)},{passive:true});let pinchStart=0;renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);targetZoom=THREE.MathUtils.clamp(targetZoom+(pinchStart-d)*.01,1.7,8);pinchStart=d}},{passive:true});
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;if(vrm){currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;vrm.scene.position.y=Math.sin(t*1.2)*.012; // gentle breathing-like whole-body float
-if(vrm.humanoid){const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');if(chest){chest.rotation.x=Math.sin(t*1.1)*.018;chest.rotation.z=Math.sin(t*.55)*.008;}const head=vrm.humanoid.getNormalizedBoneNode('head');if(head){head.rotation.x=Math.sin(t*.65)*.025;head.rotation.y=Math.sin(t*.4)*.035;head.rotation.z=Math.sin(t*.7)*.012;}}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;if(vrm){currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;vrm.scene.position.y=Math.sin(t*1.2)*.012; // movimiento corporal muy sutil, combinado con respiración del torso
+if(vrm.humanoid){const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');const chestBase=animatedBase.chest||animatedBase.spine;if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.05)*.012;chest.rotation.z+=Math.sin(t*.52)*.006;}const head=vrm.humanoid.getNormalizedBoneNode('head');if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.62)*.018;head.rotation.y+=Math.sin(t*.38)*.024;head.rotation.z+=Math.sin(t*.68)*.012;}}
 nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.5+Math.random()*3.5}if(blink>0){blink+=dt*5;if(blink>1)blink=0}const faceMood=mood==='shy'?{happy:.15,relaxed:.12,angry:.0}:{happy:mood==='soft'?.12:0,relaxed:mood==='soft'?.16:0,angry:mood==='tsun'?.12:0};for(const n of ['happy','relaxed','angry'])smoothExpr(n,faceMood[n]||0,dt);smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}vrm.update(dt);
 // Aplicar los offsets tras vrm.update para que la pose no sea sobrescrita.
-if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.00+Math.sin(t*0.8)*0.012;poseBones.leftArm.rotation.x+=0.04+Math.sin(t*1.1)*0.008;}
-if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.00+Math.sin(t*0.8)*0.012;poseBones.rightArm.rotation.x+=0.04+Math.sin(t*1.1)*0.008;}
-if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=0.20;}
-if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=0.20;}
+if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.28+Math.sin(t*0.7)*0.008;poseBones.leftArm.rotation.x+=0.025+Math.sin(t*0.9)*0.006;}
+if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.28+Math.sin(t*0.7)*0.008;poseBones.rightArm.rotation.x+=0.025+Math.sin(t*0.9)*0.006;}
+if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=0.28;}
+if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=0.28;}
 }camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
