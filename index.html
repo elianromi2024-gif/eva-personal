@@ -11,7 +11,7 @@
 </head>
 <body>
 <div id="stage"></div>
-<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>PROTOTIPO 3D · PERSONALIDAD TSUNDERE</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
+<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>PROTOTIPO 3D · POSTURA Y ANIMACIÓN SUAVE</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
 <div class="hint">Arrastrá para girar la cámara · Pellizcá para acercar</div>
 <div class="bottom"><div class="dialog"><div class="name">EVA</div><div class="line" id="line">¿Q-qué mirás tanto? No es como si hubiera preparado este lugar para vos...</div><div class="status" id="status">Cargá tu modelo VRM para comenzar.</div></div><div class="buttons"><button data-action="compliment">💗 Elogiarla</button><button data-action="tease">😏 Coquetear</button><button data-action="tea">🍵 Ofrecer té</button><button data-action="flower">🌸 Ofrecer flor</button><button data-action="look">👀 Mirarla</button><button data-action="letter">💌 Carta</button></div></div>
 <div class="loader" id="loader"><div class="loadcard"><h1>Eva está llegando 🤍</h1><p>Fondo blanco limpio. Estoy cargando el modelo 3D automáticamente desde este sitio; no hace falta elegir ningún archivo.</p><label class="filebtn">Si no carga, podés intentar elegir el archivo VRM manualmente: <input id="vrmfile" type="file" accept=".vrm,model/gltf-binary"></label><p class="tiny">Necesita conexión a internet. Dejá esta página abierta unos segundos mientras carga el modelo.</p></div></div>
@@ -86,10 +86,10 @@ function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDel
 if(vrm.humanoid){const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');if(chest){chest.rotation.x=Math.sin(t*1.1)*.018;chest.rotation.z=Math.sin(t*.55)*.008;}const head=vrm.humanoid.getNormalizedBoneNode('head');if(head){head.rotation.x=Math.sin(t*.65)*.025;head.rotation.y=Math.sin(t*.4)*.035;head.rotation.z=Math.sin(t*.7)*.012;}}
 nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.5+Math.random()*3.5}if(blink>0){blink+=dt*5;if(blink>1)blink=0}const faceMood=mood==='shy'?{happy:.15,relaxed:.12,angry:.0}:{happy:mood==='soft'?.12:0,relaxed:mood==='soft'?.16:0,angry:mood==='tsun'?.12:0};for(const n of ['happy','relaxed','angry'])smoothExpr(n,faceMood[n]||0,dt);smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}vrm.update(dt);
 // Aplicar los offsets tras vrm.update para que la pose no sea sobrescrita.
-if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=0.82;poseBones.leftArm.rotation.x+=0.04;}
-if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=0.82;poseBones.rightArm.rotation.x+=0.04;}
-if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=0.12;}
-if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=0.12;}
+if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z-=1.00+Math.sin(t*0.8)*0.012;poseBones.leftArm.rotation.x+=0.04+Math.sin(t*1.1)*0.008;}
+if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=1.00+Math.sin(t*0.8)*0.012;poseBones.rightArm.rotation.x+=0.04+Math.sin(t*1.1)*0.008;}
+if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.z-=0.20;}
+if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.z+=0.20;}
 }camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
