@@ -12,7 +12,7 @@
 <body>
 <div id="stage"></div>
 <button id="themeToggle" type="button" aria-label="Cambiar modo oscuro o claro" title="Cambiar iluminación"><span id="themeIcon">☀</span><span class="theme-label" id="themeLabel">Modo nocturno</span></button>
-<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>TOCÁ EL MODELO · REACCIONES POR ZONA</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
+<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>TOCÁ CABEZA, TORSO O BRAZOS · REACCIONES POR ZONA</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
 <div class="hint">Tocá a Eva para que reaccione · Arrastrá para girar · Pellizcá para acercar</div><div id="touchReaction" class="touch-reaction" aria-live="polite"></div>
 <div class="bottom"><div class="dialog"><div class="name">EVA</div><div class="line" id="line">¿Q-qué mirás tanto? No es como si hubiera preparado este lugar para vos...</div><div class="status" id="status">Cargá tu modelo VRM para comenzar.</div></div><div class="buttons"><button data-action="compliment">💗 Elogiarla</button><button data-action="tease">😏 Coquetear</button><button data-action="tea">🍵 Ofrecer té</button><button data-action="flower">🌸 Ofrecer flor</button><button data-action="look">👀 Mirarla</button><button data-action="letter">💌 Carta</button></div></div>
 <div class="loader" id="loader"><div class="loadcard"><h1>Eva está llegando 🤍</h1><p>Vista 3D a pantalla completa. Estoy cargando el modelo y preparando reacciones táctiles por partes del cuerpo. No hace falta elegir ningún archivo.</p><label class="filebtn">Si no carga, podés intentar elegir el archivo VRM manualmente: <input id="vrmfile" type="file" accept=".vrm,model/gltf-binary"></label><p class="tiny">Necesita conexión a internet. Dejá esta página abierta unos segundos mientras carga el modelo.</p></div></div>
@@ -197,6 +197,7 @@ function getTouchedBodyPart(e){
 }
 function reactToModelTouch(e){
  const part=getTouchedBodyPart(e);
+ console.info('Zona tocada en Eva:',part||'sin impacto');
  if(!part){showTouchReaction('Acercate un poquito y tocá a Eva directamente. 💗');return}
  if(part==='head'){setLine('¡E-eh! ¡En la cabeza no se toca sin avisar! ...¿Me despeinaste? 😳',2,'touchHead');showTouchReaction('Eva se sobresalta y ladea la cabeza. 😳');}
  else if(part==='leftArm'){setLine('¡Esa es mi mano! ...Podés saludarme, si querés. Hmph. 💗',2,'touchLeftArm');showTouchReaction('Eva mira tu mano y se mueve con timidez. 🌸');}
@@ -257,16 +258,16 @@ function animate(){
   // No forzamos los brazos a una pose artificial de casi 82 grados: respetamos la pose original del avatar.
   // Solo añadimos movimientos pequeños y amortiguados encima de la pose base.
   const idleArm=Math.sin(t*.85)*.012;
-  if(!mixer){
-  if(poseBones.leftShoulder&&poseBase.leftShoulder){poseBones.leftShoulder.rotation.copy(poseBase.leftShoulder);poseBones.leftShoulder.rotation.z+=idleArm+leftShoulderZ;poseBones.leftShoulder.rotation.x+=Math.sin(t*.72)*.008+leftShoulderX;}
-  if(poseBones.rightShoulder&&poseBase.rightShoulder){poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z-=idleArm+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.72)*.008+rightShoulderX;}
-  if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z+=Math.sin(t*.70)*.012+leftArmZ;poseBones.leftArm.rotation.x+=Math.sin(t*.9)*.008+leftArmX;}
-  if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z-=Math.sin(t*.70)*.012+rightArmZ;poseBones.rightArm.rotation.x+=Math.sin(t*.9)*.008+rightArmX;}
-  if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=Math.sin(t*.68)*.006+leftElbowX;poseBones.leftElbow.rotation.z+=leftElbowZ;}
-  if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX;poseBones.rightElbow.rotation.z+=rightElbowZ;}
-  if(poseBones.leftWrist&&poseBase.leftWrist){poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=Math.sin(t*.72)*.008+leftHandZ;}
-  if(poseBones.rightWrist&&poseBase.rightWrist){poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z-=Math.sin(t*.72)*.008+rightHandZ;}
-  }
+  // Aplicamos microgestos de brazos también cuando Relax.vrma está activa.
+  // Sin VRMA, partimos de la pose base; con VRMA, sumamos los gestos a la pose animada.
+  if(poseBones.leftShoulder&&poseBase.leftShoulder){if(!mixer)poseBones.leftShoulder.rotation.copy(poseBase.leftShoulder);poseBones.leftShoulder.rotation.z+=idleArm+leftShoulderZ;poseBones.leftShoulder.rotation.x+=Math.sin(t*.72)*.008+leftShoulderX;}
+  if(poseBones.rightShoulder&&poseBase.rightShoulder){if(!mixer)poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z-=idleArm+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.72)*.008+rightShoulderX;}
+  if(poseBones.leftArm&&poseBase.leftArm){if(!mixer)poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z+=Math.sin(t*.70)*.012+leftArmZ;poseBones.leftArm.rotation.x+=Math.sin(t*.9)*.008+leftArmX;}
+  if(poseBones.rightArm&&poseBase.rightArm){if(!mixer)poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z-=Math.sin(t*.70)*.012+rightArmZ;poseBones.rightArm.rotation.x+=Math.sin(t*.9)*.008+rightArmX;}
+  if(poseBones.leftElbow&&poseBase.leftElbow){if(!mixer)poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=Math.sin(t*.68)*.006+leftElbowX;poseBones.leftElbow.rotation.z+=leftElbowZ;}
+  if(poseBones.rightElbow&&poseBase.rightElbow){if(!mixer)poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX;poseBones.rightElbow.rotation.z+=rightElbowZ;}
+  if(poseBones.leftWrist&&poseBase.leftWrist){if(!mixer)poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=Math.sin(t*.72)*.008+leftHandZ;}
+  if(poseBones.rightWrist&&poseBase.rightWrist){if(!mixer)poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z-=Math.sin(t*.72)*.008+rightHandZ;}
  }
  camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)
 }
