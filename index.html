@@ -114,8 +114,11 @@ async function installVRMFromURL(url){
      const clip=createVRMAnimationClip(vrmAnimation,vrm);
      mixer=new THREE.AnimationMixer(vrm.scene);
      idleAction=mixer.clipAction(clip);
+     // Reproduce la animación hacia delante y hacia atrás para evitar el salto al reiniciar.
+     idleAction.setLoop(THREE.LoopPingPong, Infinity);
+     idleAction.clampWhenFinished=true;
      idleAction.reset(); idleAction.play();
-     status.textContent='¡Eva está aquí! Animación Relax activada. 💗';
+     status.textContent='¡Eva está aquí! Animación Relax con retorno suave activada. 💗';
      console.info('Animación Relax activada:',clip.name,'duración:',clip.duration);
    } catch(animationError) {
      console.error('No se pudo cargar/aplicar Relax.vrma:',animationError);
