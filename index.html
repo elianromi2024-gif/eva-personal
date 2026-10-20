@@ -120,7 +120,7 @@ async function installVRMFromURL(url){
    } catch(animationError) {
      console.error('No se pudo cargar/aplicar Relax.vrma:',animationError);
      status.textContent='Eva cargó, pero Relax.vrma falló: '+(animationError?.message||animationError);
-     showTouchReaction('Eva cargó, pero falló Relax.vrma. Revisaremos el error.');
+     showTouchReaction('Error VRMA: '+String(animationError?.message||animationError).slice(0,150));
    }
    loaderScreen.classList.add('hidden');
  }catch(err){
@@ -142,7 +142,7 @@ let pointerStartX=0,pointerStartY=0,pointerMoved=false,pointerActive=false;
 const touchReaction=document.querySelector('#touchReaction');let toastTimer;
 const touchRaycaster=new THREE.Raycaster();
 const touchNdc=new THREE.Vector2();
-function showTouchReaction(message){touchReaction.textContent=message;touchReaction.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>touchReaction.classList.remove('show'),2100)}
+function showTouchReaction(message){touchReaction.textContent=message;touchReaction.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>touchReaction.classList.remove('show'),9000)}
 function getTouchedBodyPart(e){
  if(!vrm)return null;
  const rect=renderer.domElement.getBoundingClientRect();
