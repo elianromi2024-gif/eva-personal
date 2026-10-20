@@ -7,7 +7,7 @@
 :root{--pink:#e88ab7;--ink:#392b3b;--glass:rgba(255,255,255,.88)}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c9ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}#stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.top{display:none!important;position:fixed;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}.brand{font-size:12px;font-weight:850;letter-spacing:.15em;color:#594454;background:var(--glass);padding:10px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c}.brand small{display:block;font-weight:600;letter-spacing:.05em;opacity:.65;margin-top:3px}.affinity{min-width:120px;background:var(--glass);padding:9px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c;font-size:13px;font-weight:700}.meter{height:5px;border-radius:8px;background:#e8dfe7;margin-top:7px;overflow:hidden}.meter span{display:block;height:100%;width:57%;background:linear-gradient(90deg,#e87fb3,#f4b5d3);transition:width .6s}.bottom{display:none!important}.dialog{background:rgba(255,255,255,.93);border:1px solid #f1e4ed;border-radius:20px;padding:14px 16px;box-shadow:0 8px 28px #7b5b7218;min-height:94px}.name{font-size:12px;font-weight:900;letter-spacing:.14em;color:#c65f96;margin-bottom:5px}.line{font-size:15px;line-height:1.4}.buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.buttons button,.filebtn{border:1px solid #ead7e5;border-radius:15px;background:linear-gradient(145deg,#fff,#fbf2f8);color:#573f53;padding:12px 5px;font-weight:750;font-size:12px;box-shadow:0 3px 10px #8c708018;min-height:48px}.buttons button:active,.filebtn:active{transform:scale(.98)}.filebtn{pointer-events:auto;display:inline-block;white-space:nowrap}.filebtn input{display:none}.hint{display:none!important;position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#ffffffd9;border:1px solid #f0e4ed;border-radius:99px;padding:8px 12px;font-size:11px;white-space:nowrap;color:#806b7c;pointer-events:none}.status{font-size:11px;color:#8d7889;margin-top:7px}.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:5;padding:28px;text-align:center}.loader.hidden{display:none}.loadcard{max-width:340px;border:1px solid #f0e2ed;border-radius:24px;padding:24px;background:#fff;box-shadow:0 12px 40px #b58aa21c}.loadcard h1{font-size:22px;margin:0 0 8px}.loadcard p{font-size:14px;line-height:1.5;color:#7e6a7a}.loadcard .filebtn{margin-top:8px;background:#f9e8f2}.tiny{font-size:11px!important;color:#9b8a99!important}.touch-reaction{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);max-width:min(88vw,420px);padding:12px 18px;border:1px solid #ffffffb8;border-radius:22px;background:rgba(255,255,255,.88);color:#483548;font-size:15px;font-weight:650;text-align:center;box-shadow:0 8px 28px #344b6222;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:4}.touch-reaction.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(min-width:700px){.top{left:24px;right:24px}.hint{top:88px}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.2.0/lib/three-vrm.module.js"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.2.0/lib/three-vrm.module.js","@pixiv/three-vrm-animation":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm-animation@3.2.0/lib/three-vrm-animation.module.js"}}</script>
 </head>
 <body>
 <div id="stage"></div>
@@ -19,6 +19,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { VRMAnimationLoaderPlugin, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
 const stage=document.querySelector('#stage'), loaderScreen=document.querySelector('#loader');
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78baf0);
@@ -54,7 +55,7 @@ for(const [x,y,z,sc] of [[-15,8,-42,.40],[-11,8.4,-43,.34],[-7,8.1,-44,.38],[12,
 }
 scene.add(clouds);
 // Escenario exterior sencillo: cielo, nubes lejanas y terraza de losas blancas.
-let vrm=null, mixer=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=4.1, targetZoom=4.1, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=4, reactionMood='idle', modelBaseY=0, modelBaseX=0;
+let vrm=null, mixer=null, idleAction=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=4.1, targetZoom=4.1, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=4, reactionMood='idle', modelBaseY=0, modelBaseX=0;
 const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
 function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;reactionMood=newMood;reactionTime=0;}
 const actions={
@@ -99,7 +100,25 @@ async function installVRMFromURL(url){
    poseBase={}; animatedBase={};
    for(const [name,bone] of Object.entries(poseBones)) if(bone) poseBase[name]=bone.rotation.clone();
    for(const name of ['chest','spine','head']) { const bone=vrm.humanoid?.getNormalizedBoneNode(name); if(bone) animatedBase[name]=bone.rotation.clone(); }
-   status.textContent='¡Eva está aquí! Modelo 3D cargado.';
+   // Cargamos la animación VRMA por separado para no alterar el archivo del avatar.
+   try {
+     const animationLoader=new GLTFLoader();
+     animationLoader.register(parser=>new VRMAnimationLoaderPlugin(parser));
+     const animURL=new URL('Relax.vrma',window.location.href).href;
+     const animGltf=await animationLoader.loadAsync(animURL);
+     const vrmAnimation=animGltf.userData.vrmAnimations?.[0];
+     if(vrmAnimation) {
+       const clip=createVRMAnimationClip(vrmAnimation,vrm);
+       mixer=new THREE.AnimationMixer(vrm.scene);
+       idleAction=mixer.clipAction(clip); idleAction.play();
+       status.textContent='¡Eva está aquí! Animación Relax activada. 💗';
+     } else {
+       status.textContent='Eva cargó; no encontré una animación VRMA válida.';
+     }
+   } catch(animationError) {
+     console.warn('No se pudo cargar Relax.vrma:',animationError);
+     status.textContent='Eva cargó. Falta publicar Relax.vrma junto a index.html para activar la animación.';
+   }
    loaderScreen.classList.add('hidden');
  }catch(err){
    console.error('Error cargando el VRM:',err);
@@ -193,6 +212,7 @@ function animate(){
   else if(moodNow==='touchRightArm') { headZ=-.10*reactionFade;rightShoulderX=-.07*reactionFade;rightShoulderZ=.10*reactionFade;rightArmX=-.04*reactionFade;rightArmZ=.13*reactionFade;rightElbowX=-.09*reactionFade;rightHandZ=-.07*reactionFade; }
   else if(moodNow==='touchTorso') { headX=-.07*reactionFade;headZ=.12*reactionFade;chestX=-.07*reactionFade;leftShoulderZ=-.045*reactionFade;rightShoulderZ=.045*reactionFade; }
   else if(moodNow==='touchLegs') { headZ=-.09*reactionFade;chestZ=.025*reactionFade; }
+  if(mixer) mixer.update(dt);
   if(vrm.humanoid){
    const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
    const chestBase=animatedBase.chest||animatedBase.spine;
@@ -215,6 +235,7 @@ function animate(){
   // No forzamos los brazos a una pose artificial de casi 82 grados: respetamos la pose original del avatar.
   // Solo añadimos movimientos pequeños y amortiguados encima de la pose base.
   const idleArm=Math.sin(t*.85)*.012;
+  if(!mixer){
   if(poseBones.leftShoulder&&poseBase.leftShoulder){poseBones.leftShoulder.rotation.copy(poseBase.leftShoulder);poseBones.leftShoulder.rotation.z+=idleArm+leftShoulderZ;poseBones.leftShoulder.rotation.x+=Math.sin(t*.72)*.008+leftShoulderX;}
   if(poseBones.rightShoulder&&poseBase.rightShoulder){poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z-=idleArm+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.72)*.008+rightShoulderX;}
   if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z+=Math.sin(t*.70)*.012+leftArmZ;poseBones.leftArm.rotation.x+=Math.sin(t*.9)*.008+leftArmX;}
@@ -223,6 +244,7 @@ function animate(){
   if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX;poseBones.rightElbow.rotation.z+=rightElbowZ;}
   if(poseBones.leftWrist&&poseBase.leftWrist){poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=Math.sin(t*.72)*.008+leftHandZ;}
   if(poseBones.rightWrist&&poseBase.rightWrist){poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z-=Math.sin(t*.72)*.008+rightHandZ;}
+  }
  }
  camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)
 }
