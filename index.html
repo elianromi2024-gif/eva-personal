@@ -105,7 +105,7 @@ async function installVRMFromURL(url){
    console.error('Error cargando el VRM:',err);
    status.textContent='No se pudo cargar el modelo automático. Revisá la conexión o usá el selector manual.';
    const p=loaderScreen.querySelector('p');
-   if(p) p.textContent='No pude descargar Frii-vrm1.0.vrm. Comprobá que esté en la raíz del repositorio y que GitHub Pages haya terminado de publicar. También podés elegir el archivo manualmente.';
+   if(p) p.textContent='No pude descargar 6000630467514700226_optimizado.vrm. Comprobá que esté en la raíz del repositorio y que GitHub Pages haya terminado de publicar. También podés elegir el archivo manualmente.';
  }
 }
 fileInput.addEventListener('change',async e=>{
@@ -114,7 +114,7 @@ fileInput.addEventListener('change',async e=>{
  const url=URL.createObjectURL(file);
  try{await installVRMFromURL(url)}finally{URL.revokeObjectURL(url)}
 });
-const modelURL=new URL('Frii-vrm1.0.vrm',window.location.href).href;
+const modelURL=new URL('6000630467514700226_optimizado.vrm',window.location.href).href;
 installVRMFromURL(modelURL);
 renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;targetYaw+=(e.clientX-lastX)*.008;lastX=e.clientX;lastY=e.clientY});renderer.domElement.addEventListener('pointerup',()=>drag=false);renderer.domElement.addEventListener('pointercancel',()=>drag=false);renderer.domElement.addEventListener('wheel',e=>{targetZoom=THREE.MathUtils.clamp(targetZoom+e.deltaY*.003,1.7,8)},{passive:true});let pinchStart=0;renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);targetZoom=THREE.MathUtils.clamp(targetZoom+(pinchStart-d)*.01,1.7,8);pinchStart=d}},{passive:true});
 function animate(){
