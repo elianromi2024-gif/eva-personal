@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Eva · Espacio 3D</title>
+<style>
+:root{--pink:#e88ab7;--ink:#392b3b;--glass:rgba(255,255,255,.88)}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c9ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}#stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.top{display:none!important;position:fixed;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}.brand{font-size:12px;font-weight:850;letter-spacing:.15em;color:#594454;background:var(--glass);padding:10px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c}.brand small{display:block;font-weight:600;letter-spacing:.05em;opacity:.65;margin-top:3px}.affinity{min-width:120px;background:var(--glass);padding:9px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c;font-size:13px;font-weight:700}.meter{height:5px;border-radius:8px;background:#e8dfe7;margin-top:7px;overflow:hidden}.meter span{display:block;height:100%;width:57%;background:linear-gradient(90deg,#e87fb3,#f4b5d3);transition:width .6s}.bottom{display:none!important}.dialog{background:rgba(255,255,255,.93);border:1px solid #f1e4ed;border-radius:20px;padding:14px 16px;box-shadow:0 8px 28px #7b5b7218;min-height:94px}.name{font-size:12px;font-weight:900;letter-spacing:.14em;color:#c65f96;margin-bottom:5px}.line{font-size:15px;line-height:1.4}.buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.buttons button,.filebtn{border:1px solid #ead7e5;border-radius:15px;background:linear-gradient(145deg,#fff,#fbf2f8);color:#573f53;padding:12px 5px;font-weight:750;font-size:12px;box-shadow:0 3px 10px #8c708018;min-height:48px}.buttons button:active,.filebtn:active{transform:scale(.98)}.filebtn{pointer-events:auto;display:inline-block;white-space:nowrap}.filebtn input{display:none}.hint{display:none!important;position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#ffffffd9;border:1px solid #f0e4ed;border-radius:99px;padding:8px 12px;font-size:11px;white-space:nowrap;color:#806b7c;pointer-events:none}.status{font-size:11px;color:#8d7889;margin-top:7px}.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:5;padding:28px;text-align:center}.loader.hidden{display:none}.loadcard{max-width:340px;border:1px solid #f0e2ed;border-radius:24px;padding:24px;background:#fff;box-shadow:0 12px 40px #b58aa21c}.loadcard h1{font-size:22px;margin:0 0 8px}.loadcard p{font-size:14px;line-height:1.5;color:#7e6a7a}.loadcard .filebtn{margin-top:8px;background:#f9e8f2}.tiny{font-size:11px!important;color:#9b8a99!important}.touch-reaction{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);max-width:min(88vw,420px);padding:12px 18px;border:1px solid #ffffffb8;border-radius:22px;background:rgba(255,255,255,.88);color:#483548;font-size:15px;font-weight:650;text-align:center;box-shadow:0 8px 28px #344b6222;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:4}.touch-reaction.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:700px){.top{left:24px;right:24px}.hint{top:88px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.2.0/lib/three-vrm.module.js","@pixiv/three-vrm-animation":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm-animation@3.2.0/lib/three-vrm-animation.module.js"}}</script>
+</head>
+<body>
+<div id="stage"></div>
+<div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>TOCÁ EL MODELO · REACCIONES POR ZONA</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
+<div class="hint">Tocá a Eva para que reaccione · Arrastrá para girar · Pellizcá para acercar</div><div id="touchReaction" class="touch-reaction" aria-live="polite"></div>
+<div class="bottom"><div class="dialog"><div class="name">EVA</div><div class="line" id="line">¿Q-qué mirás tanto? No es como si hubiera preparado este lugar para vos...</div><div class="status" id="status">Cargá tu modelo VRM para comenzar.</div></div><div class="buttons"><button data-action="compliment">💗 Elogiarla</button><button data-action="tease">😏 Coquetear</button><button data-action="tea">🍵 Ofrecer té</button><button data-action="flower">🌸 Ofrecer flor</button><button data-action="look">👀 Mirarla</button><button data-action="letter">💌 Carta</button></div></div>
+<div class="loader" id="loader"><div class="loadcard"><h1>Eva está llegando 🤍</h1><p>Vista 3D a pantalla completa. Estoy cargando el modelo y preparando reacciones táctiles por partes del cuerpo. No hace falta elegir ningún archivo.</p><label class="filebtn">Si no carga, podés intentar elegir el archivo VRM manualmente: <input id="vrmfile" type="file" accept=".vrm,model/gltf-binary"></label><p class="tiny">Necesita conexión a internet. Dejá esta página abierta unos segundos mientras carga el modelo.</p></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { VRMAnimationLoaderPlugin, VRMLookAtQuaternionProxy, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
+const stage=document.querySelector('#stage'), loaderScreen=document.querySelector('#loader');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x78baf0);
+scene.fog=new THREE.Fog(0xa9d5f5,42,110);
+const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,100); camera.position.set(0,1.35,4.55);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.02; stage.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xeaf6ff,0x879bb3,1.15));
+const key=new THREE.DirectionalLight(0xfff8ed,1.35);key.position.set(-3,6,4);scene.add(key);
+const fill=new THREE.DirectionalLight(0xc5e4ff,.48);fill.position.set(4,3,2);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xffffff,.55);rim.position.set(0,4,-4);scene.add(rim);
+
+// Cielo azul y terraza de losas blancas, sin modificar el VRM.
+const skyDome=new THREE.Mesh(
+ new THREE.SphereGeometry(90,40,24,0,Math.PI*2,0,Math.PI/2),
+ new THREE.MeshBasicMaterial({color:0x78baf0,side:THREE.BackSide})
+);
+skyDome.position.y=-1.2;scene.add(skyDome);
+// Textura procedural de losas: contraste suave, juntas visibles incluso en móvil.
+const tileCanvas=document.createElement('canvas');tileCanvas.width=128;tileCanvas.height=128;
+const tileCtx=tileCanvas.getContext('2d');
+tileCtx.fillStyle='#f8fbff';tileCtx.fillRect(0,0,128,128);
+tileCtx.fillStyle='#f1f5fa';tileCtx.fillRect(2,2,61,61);tileCtx.fillRect(66,66,60,60);
+tileCtx.strokeStyle='#c7d4e3';tileCtx.lineWidth=2;tileCtx.strokeRect(1,1,126,126);
+const tileTexture=new THREE.CanvasTexture(tileCanvas);tileTexture.wrapS=THREE.RepeatWrapping;tileTexture.wrapT=THREE.RepeatWrapping;tileTexture.repeat.set(125,125);tileTexture.colorSpace=THREE.SRGBColorSpace;
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),
+ new THREE.MeshStandardMaterial({map:tileTexture,color:0xffffff,roughness:.82,metalness:0}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-.025;scene.add(floor);
+// Nubes decorativas lejanas, discretas para mantener visible a Frii.
+const cloudMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.23,depthWrite:false});
+const clouds=new THREE.Group();
+for(const [x,y,z,sc] of [[-15,8,-42,.40],[-11,8.4,-43,.34],[-7,8.1,-44,.38],[12,8.8,-46,.39],[16,9.1,-47,.31],[8,8.5,-48,.30],[-20,10,-52,.36],[20,10.2,-54,.38]]){
+ const g=new THREE.Group();for(const [px,py,pz,r] of [[0,0,0,.7],[.65,.12,0,.55],[-.62,.05,0,.48],[.15,.35,0,.48]]){const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,10),cloudMat);m.position.set(px,py,pz);g.add(m)}g.position.set(x,y,z);g.scale.setScalar(sc);clouds.add(g)
+}
+scene.add(clouds);
+// Escenario exterior sencillo: cielo, nubes lejanas y terraza de losas blancas.
+let vrm=null, mixer=null, idleAction=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=4.1, targetZoom=4.1, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=4, reactionMood='idle', modelBaseY=0, modelBaseX=0;
+const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
+function setLine(text,delta=0,newMood='tsun'){line.textContent=text;affinity=Math.max(0,Math.min(100,affinity+delta));document.querySelector('#aff').textContent=affinity;document.querySelector('#bar').style.width=affinity+'%';mood=newMood;reactionMood=newMood;reactionTime=0;}
+const actions={
+ compliment(){setLine('¡N-no digas esas cosas tan de repente! ...Aunque, si vas a insistir, podés decirlo otra vez. 💗',5,'compliment')},
+ tease(){setLine('¿Te parece divertido hacerme sonrojar? ¡Sos imposible! ...No dije que te detuvieras.',3,'tease')},
+ tea(){setLine('Te preparé té. No porque me preocupe por vos, ¿eh? Simplemente hice una taza de más.',4,'tea')},
+ flower(){setLine('¿Una flor para mí...? Hmph. La voy a aceptar para que no se marchite. Gracias… 🌸',6,'flower')},
+ look(){setLine('¿Q-qué? ¿Tengo algo en la cara? Dejá de mirarme así… aunque podés quedarte un ratito.',1,'look')},
+ letter(){setLine('¿Una carta? La leeré cuando no estés mirando. Y ni se te ocurra esperar una respuesta bonita…',4,'letter')}
+};
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{actions[b.dataset.action]?.();}));
+function setExpr(name,value){if(vrm?.expressionManager){try{vrm.expressionManager.setValue(name,value)}catch(e){}}}
+function smoothExpr(name,target,dt){if(!vrm?.expressionManager)return;let current=expressions[name]||0;current=THREE.MathUtils.damp(current,target,5,dt);expressions[name]=current;try{vrm.expressionManager.setValue(name,current)}catch(e){}}
+async function installVRMFromURL(url){
+ status.textContent='Conectando con el modelo 3D…';
+ const gltfLoader=new GLTFLoader();
+ gltfLoader.crossOrigin='anonymous';
+ gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
+ gltfLoader.register(parser=>new VRMAnimationLoaderPlugin(parser));
+ try{
+   const gltf=await gltfLoader.loadAsync(url);
+   if(vrm){scene.remove(vrm.scene);VRMUtils.deepDispose(vrm.scene)}
+   vrm=gltf.userData.vrm;
+   if(!vrm) throw new Error('El archivo abrió, pero no contiene un VRM válido.');
+   VRMUtils.rotateVRM0(vrm);scene.add(vrm.scene);vrm.scene.position.set(0,0,0);vrm.scene.rotation.y=Math.PI;
+   // El proxy permite que las animaciones VRMA que controlan la mirada se apliquen correctamente.
+   if(vrm.lookAt){const lookAtProxy=new VRMLookAtQuaternionProxy(vrm.lookAt);lookAtProxy.name='lookAtQuaternionProxy';vrm.scene.add(lookAtProxy);}
+   const box=new THREE.Box3().setFromObject(vrm.scene), size=box.getSize(new THREE.Vector3());
+   vrm.scene.position.y-=box.min.y;
+   modelBaseY=vrm.scene.position.y;modelBaseX=vrm.scene.position.x;
+   const h=Math.max(size.y,1.4);
+   // Encuadre de cuerpo completo: más distancia y un punto de mirada ligeramente elevado.
+   camera.position.set(0,h*.50,Math.max(3.5,h*2.65));camera.lookAt(0,h*.48,0);zoom=camera.position.z;targetZoom=zoom;
+   // Guardamos una pose de reposo para aplicarla después de cada actualización del VRM.
+   // Esto no modifica el archivo .vrm; solo afecta a esta sesión de la página.
+   poseBones={
+     leftShoulder:vrm.humanoid?.getRawBoneNode('leftShoulder'),
+     rightShoulder:vrm.humanoid?.getRawBoneNode('rightShoulder'),
+     leftArm:vrm.humanoid?.getRawBoneNode('leftUpperArm'),
+     rightArm:vrm.humanoid?.getRawBoneNode('rightUpperArm'),
+     leftElbow:vrm.humanoid?.getRawBoneNode('leftLowerArm'),
+     rightElbow:vrm.humanoid?.getRawBoneNode('rightLowerArm'),
+     leftWrist:vrm.humanoid?.getRawBoneNode('leftHand'),
+     rightWrist:vrm.humanoid?.getRawBoneNode('rightHand')
+   };
+   poseBase={}; animatedBase={};
+   for(const [name,bone] of Object.entries(poseBones)) if(bone) poseBase[name]=bone.rotation.clone();
+   for(const name of ['chest','spine','head']) { const bone=vrm.humanoid?.getNormalizedBoneNode(name); if(bone) animatedBase[name]=bone.rotation.clone(); }
+   // Cargamos la animación VRMA por separado para no alterar el archivo del avatar.
+   try {
+     const animURL=new URL('Relax.vrma',window.location.href).href;
+     console.info('Cargando animación VRMA:',animURL);
+     const animGltf=await gltfLoader.loadAsync(animURL);
+     const vrmAnimation=animGltf.userData.vrmAnimations?.[0];
+     if(!vrmAnimation) throw new Error('El archivo se descargó, pero no contiene vrmAnimations[0].');
+     const clip=createVRMAnimationClip(vrmAnimation,vrm);
+     mixer=new THREE.AnimationMixer(vrm.scene);
+     idleAction=mixer.clipAction(clip);
+     // Reproduce la animación hacia delante y hacia atrás para evitar el salto al reiniciar.
+     idleAction.setLoop(THREE.LoopPingPong, Infinity);
+     idleAction.clampWhenFinished=true;
+     idleAction.reset(); idleAction.play();
+     status.textContent='¡Eva está aquí! Animación Relax con retorno suave activada. 💗';
+     console.info('Animación Relax activada:',clip.name,'duración:',clip.duration);
+   } catch(animationError) {
+     console.error('No se pudo cargar/aplicar Relax.vrma:',animationError);
+     status.textContent='Eva cargó, pero Relax.vrma falló: '+(animationError?.message||animationError);
+     showTouchReaction('Error VRMA: '+String(animationError?.message||animationError).slice(0,150));
+   }
+   loaderScreen.classList.add('hidden');
+ }catch(err){
+   console.error('Error cargando el VRM:',err);
+   status.textContent='No se pudo cargar el modelo automático. Revisá la conexión o usá el selector manual.';
+   const p=loaderScreen.querySelector('p');
+   if(p) p.textContent='No pude descargar 6000630467514700226_optimizado.vrm. Comprobá que esté en la raíz del repositorio y que GitHub Pages haya terminado de publicar. También podés elegir el archivo manualmente.';
+ }
+}
+fileInput.addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ status.textContent='Cargando modelo…';
+ const url=URL.createObjectURL(file);
+ try{await installVRMFromURL(url)}finally{URL.revokeObjectURL(url)}
+});
+const modelURL=new URL('6000630467514700226_optimizado.vrm',window.location.href).href;
+installVRMFromURL(modelURL);
+let pointerStartX=0,pointerStartY=0,pointerMoved=false,pointerActive=false;
+const touchReaction=document.querySelector('#touchReaction');let toastTimer;
+const touchRaycaster=new THREE.Raycaster();
+const touchNdc=new THREE.Vector2();
+function showTouchReaction(message){touchReaction.textContent=message;touchReaction.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>touchReaction.classList.remove('show'),9000)}
+function getTouchedBodyPart(e){
+ if(!vrm)return null;
+ const rect=renderer.domElement.getBoundingClientRect();
+ touchNdc.set(((e.clientX-rect.left)/rect.width)*2-1,-(((e.clientY-rect.top)/rect.height)*2-1));
+ touchRaycaster.setFromCamera(touchNdc,camera);
+ vrm.scene.updateMatrixWorld(true);
+ const hits=touchRaycaster.intersectObject(vrm.scene,true);
+ const hit=hits.find(h=>h.object?.isMesh && h.object.visible && h.point);
+ if(!hit)return null;
+ const groups=[
+  ['head',['head','neck']],
+  ['leftArm',['leftUpperArm','leftLowerArm','leftHand','leftShoulder']],
+  ['rightArm',['rightUpperArm','rightLowerArm','rightHand','rightShoulder']],
+  ['torso',['upperChest','chest','spine','hips']],
+  ['legs',['leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']]
+ ];
+ let best={distance:Infinity,part:null};
+ for(const [part,names] of groups){
+  for(const name of names){
+   const bone=vrm.humanoid?.getNormalizedBoneNode(name);
+   if(!bone)continue;
+   const pos=bone.getWorldPosition(new THREE.Vector3());
+   const d=pos.distanceTo(hit.point);
+   if(d<best.distance)best={distance:d,part};
+  }
+ }
+ if(best.part)return best.part;
+ // Fallback to the real 3D hit height, not fixed screen regions.
+ const bounds=new THREE.Box3().setFromObject(vrm.scene);
+ const h=Math.max(.01,bounds.max.y-bounds.min.y);
+ const rel=(hit.point.y-bounds.min.y)/h;
+ return rel>.78?'head':rel>.48?'torso':rel>.25?'legs':'legs';
+}
+function reactToModelTouch(e){
+ const part=getTouchedBodyPart(e);
+ if(!part){showTouchReaction('Acercate un poquito y tocá a Eva directamente. 💗');return}
+ if(part==='head'){setLine('¡E-eh! ¡En la cabeza no se toca sin avisar! ...¿Me despeinaste? 😳',2,'touchHead');showTouchReaction('Eva se sobresalta y ladea la cabeza. 😳');}
+ else if(part==='leftArm'){setLine('¡Esa es mi mano! ...Podés saludarme, si querés. Hmph. 💗',2,'touchLeftArm');showTouchReaction('Eva mira tu mano y se mueve con timidez. 🌸');}
+ else if(part==='rightArm'){setLine('¿Me tocaste el brazo? ¡Avisá antes! ...No dije que te alejaras. 😤',1,'touchRightArm');showTouchReaction('Eva aparta suavemente el brazo. 😳');}
+ else if(part==='torso'){setLine('¡¿Q-qué hacés?! ¡Me tomaste por sorpresa! 💗',1,'touchTorso');showTouchReaction('Eva se sobresalta y se sonroja. 💗');}
+ else {setLine('¡O-oye! ¡Mis piernas no son un juguete! ...Baka. 😳',0,'touchLegs');showTouchReaction('Eva reacciona con timidez y cambia el peso del cuerpo. 🌸');}
+}
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag=true;pointerActive=true;pointerMoved=false;pointerStartX=lastX=e.clientX;pointerStartY=lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;if(Math.hypot(e.clientX-pointerStartX,e.clientY-pointerStartY)>9)pointerMoved=true;if(pointerMoved)targetYaw+=dx*.008;lastX=e.clientX;lastY=e.clientY});
+renderer.domElement.addEventListener('pointerup',e=>{if(pointerActive&&!pointerMoved)reactToModelTouch(e);drag=false;pointerActive=false});renderer.domElement.addEventListener('pointercancel',()=>{drag=false;pointerActive=false});
+renderer.domElement.addEventListener('wheel',e=>{targetZoom=THREE.MathUtils.clamp(targetZoom+e.deltaY*.003,1.7,8)},{passive:true});let pinchStart=0;renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2){pointerMoved=true;pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);targetZoom=THREE.MathUtils.clamp(targetZoom+(pinchStart-d)*.01,1.7,8);pinchStart=d}},{passive:true});
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ if(vrm){
+  currentYaw=THREE.MathUtils.damp(currentYaw,targetYaw,4,dt);vrm.scene.rotation.y=Math.PI+currentYaw;
+  // Idle motion is deliberately subtle, but visible: breathing + a slow weight shift.
+  vrm.scene.position.y=modelBaseY+Math.sin(t*1.55)*.012;vrm.scene.position.x=modelBaseX+Math.sin(t*.62)*.009;
+  reactionTime=Math.min(reactionTime+dt,4.2);
+  // Each button reaction has a clear entrance, a short readable hold, and a gentle release.
+  const rise=THREE.MathUtils.smoothstep(reactionTime,0.04,0.42);
+  const fall=1-THREE.MathUtils.smoothstep(reactionTime,1.65,3.65);
+  const reactionFade=Math.max(0,rise*fall);
+  const moodNow=reactionMood;
+  let headX=0,headY=0,headZ=0,chestX=0,chestZ=0,leftShoulderX=0,rightShoulderX=0,leftShoulderZ=0,rightShoulderZ=0,leftArmX=0,rightArmX=0,leftArmZ=0,rightArmZ=0,leftElbowX=0,rightElbowX=0,leftElbowZ=0,rightElbowZ=0,leftHandZ=0,rightHandZ=0;
+  if(moodNow==='tease') { headZ=-.28*reactionFade;headY=-.13*reactionFade;chestZ=-.055*reactionFade;chestX=-.025*reactionFade;rightShoulderX=-.12*reactionFade*.38;rightShoulderZ=-.12*reactionFade*.38;rightArmX=-.22*reactionFade*.38;rightArmZ=-.27*reactionFade*.38;rightElbowX=-.10*reactionFade*.38;rightElbowZ=-.34*reactionFade*.38;rightHandZ=-.12*reactionFade*.38; }
+  else if(moodNow==='compliment') { headZ=.22*reactionFade;headX=-.07*reactionFade;chestX=-.045*reactionFade;leftShoulderZ=-.08*reactionFade*.38;rightShoulderZ=.08*reactionFade*.38;leftArmZ=-.13*reactionFade*.38;rightArmZ=.13*reactionFade*.38;leftElbowZ=-.08*reactionFade*.38;rightElbowZ=.08*reactionFade*.38;leftHandZ=.08*reactionFade*.38;rightHandZ=-.08*reactionFade*.38; }
+  else if(moodNow==='tea') { headX=.16*reactionFade;headZ=.05*reactionFade;chestX=-.11*reactionFade;leftShoulderX=-.10*reactionFade*.38;rightShoulderX=-.10*reactionFade*.38;leftShoulderZ=-.08*reactionFade*.38;rightShoulderZ=.08*reactionFade*.38;leftArmX=-.16*reactionFade*.38;rightArmX=-.16*reactionFade*.38;leftArmZ=-.10*reactionFade*.38;rightArmZ=.10*reactionFade*.38;leftElbowX=-.08*reactionFade*.38;rightElbowX=-.08*reactionFade*.38;leftElbowZ=-.17*reactionFade*.38;rightElbowZ=.17*reactionFade*.38;leftHandZ=.08*reactionFade*.38;rightHandZ=-.08*reactionFade*.38; }
+  else if(moodNow==='flower') { headZ=.27*reactionFade;headX=-.05*reactionFade;chestX=-.07*reactionFade;leftShoulderZ=.12*reactionFade*.38;rightShoulderZ=-.12*reactionFade*.38;leftArmZ=.17*reactionFade*.38;rightArmZ=-.17*reactionFade*.38;leftElbowX=-.08*reactionFade*.38;rightElbowX=-.08*reactionFade*.38;leftElbowZ=.19*reactionFade*.38;rightElbowZ=-.19*reactionFade*.38;leftHandZ=.12*reactionFade*.38;rightHandZ=-.12*reactionFade*.38; }
+  else if(moodNow==='look') { headZ=-.18*reactionFade;headY=.16*reactionFade;chestZ=.045*reactionFade;rightShoulderZ=-.045*reactionFade*.38;leftShoulderZ=.045*reactionFade*.38;rightArmZ=-.06*reactionFade*.38;leftArmZ=.06*reactionFade*.38; }
+  else if(moodNow==='letter') { headX=.20*reactionFade;headZ=-.15*reactionFade;chestX=-.075*reactionFade;leftShoulderX=-.07*reactionFade*.38;rightShoulderX=-.07*reactionFade*.38;leftShoulderZ=-.08*reactionFade*.38;rightShoulderZ=.08*reactionFade*.38;leftArmX=-.10*reactionFade*.38;rightArmX=-.10*reactionFade*.38;leftArmZ=-.12*reactionFade*.38;rightArmZ=.12*reactionFade*.38;leftElbowX=-.06*reactionFade*.38;rightElbowX=-.06*reactionFade*.38;leftElbowZ=-.12*reactionFade*.38;rightElbowZ=.12*reactionFade*.38;leftHandZ=.06*reactionFade*.38;rightHandZ=-.06*reactionFade*.38; }
+  else if(moodNow==='soft') { headX=.10*reactionFade;chestX=-.05*reactionFade; }
+  else if(moodNow==='touchHead') { headX=-.08*reactionFade;headZ=.13*reactionFade;headY=.07*reactionFade;chestX=-.025*reactionFade; }
+  else if(moodNow==='touchLeftArm') { headZ=.10*reactionFade;leftShoulderX=-.07*reactionFade;leftShoulderZ=-.10*reactionFade;leftArmX=-.04*reactionFade;leftArmZ=-.13*reactionFade;leftElbowX=-.09*reactionFade;leftHandZ=.07*reactionFade; }
+  else if(moodNow==='touchRightArm') { headZ=-.10*reactionFade;rightShoulderX=-.07*reactionFade;rightShoulderZ=.10*reactionFade;rightArmX=-.04*reactionFade;rightArmZ=.13*reactionFade;rightElbowX=-.09*reactionFade;rightHandZ=-.07*reactionFade; }
+  else if(moodNow==='touchTorso') { headX=-.07*reactionFade;headZ=.12*reactionFade;chestX=-.07*reactionFade;leftShoulderZ=-.045*reactionFade;rightShoulderZ=.045*reactionFade; }
+  else if(moodNow==='touchLegs') { headZ=-.09*reactionFade;chestZ=.025*reactionFade; }
+  if(mixer) mixer.update(dt);
+  if(vrm.humanoid){
+   const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
+   const chestBase=animatedBase.chest||animatedBase.spine;
+   if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.55)*.045+chestX;chest.rotation.z+=Math.sin(t*.72)*.024+chestZ;}
+   const spine=vrm.humanoid.getNormalizedBoneNode('spine');
+   if(spine&&animatedBase.spine&&spine!==chest){spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.55)*.022+chestX*.35;spine.rotation.z+=Math.sin(t*.62)*.009+chestZ*.3;}
+   const head=vrm.humanoid.getNormalizedBoneNode('head');
+   if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.82)*.035+headX;head.rotation.y+=Math.sin(t*.57)*.045+headY;head.rotation.z+=Math.sin(t*.68)*.028+headZ;}
+  }
+  nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.1+Math.random()*2.7}if(blink>0){blink+=dt*5.5;if(blink>1)blink=0}
+  const faceMood={happy:0,relaxed:0,angry:0,surprised:0};
+  if(['shy','compliment','tease','flower','touchLeftArm','touchRightArm','touchTorso'].includes(mood)){faceMood.happy=mood==='tease'?.20:.16;faceMood.relaxed=.10;}
+  if(['soft','tea','letter','touchLegs'].includes(mood)){faceMood.happy=.10;faceMood.relaxed=.16;}
+  if(['tsun','look'].includes(mood)){faceMood.angry=.10;}
+  if(mood==='touchHead'){faceMood.surprised=.30;faceMood.happy=.08;}
+  for(const n of ['happy','relaxed','angry','surprised'])smoothExpr(n,faceMood[n]||0,dt);
+  smoothExpr('blink',blink>0?Math.sin(Math.min(blink,1)*Math.PI):0,dt);
+  if(vrm.lookAt){try{vrm.lookAt.target.copy(camera.position)}catch(e){}}
+  vrm.update(dt);
+  // No forzamos los brazos a una pose artificial de casi 82 grados: respetamos la pose original del avatar.
+  // Solo añadimos movimientos pequeños y amortiguados encima de la pose base.
+  const idleArm=Math.sin(t*.85)*.012;
+  if(!mixer){
+  if(poseBones.leftShoulder&&poseBase.leftShoulder){poseBones.leftShoulder.rotation.copy(poseBase.leftShoulder);poseBones.leftShoulder.rotation.z+=idleArm+leftShoulderZ;poseBones.leftShoulder.rotation.x+=Math.sin(t*.72)*.008+leftShoulderX;}
+  if(poseBones.rightShoulder&&poseBase.rightShoulder){poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z-=idleArm+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.72)*.008+rightShoulderX;}
+  if(poseBones.leftArm&&poseBase.leftArm){poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z+=Math.sin(t*.70)*.012+leftArmZ;poseBones.leftArm.rotation.x+=Math.sin(t*.9)*.008+leftArmX;}
+  if(poseBones.rightArm&&poseBase.rightArm){poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z-=Math.sin(t*.70)*.012+rightArmZ;poseBones.rightArm.rotation.x+=Math.sin(t*.9)*.008+rightArmX;}
+  if(poseBones.leftElbow&&poseBase.leftElbow){poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=Math.sin(t*.68)*.006+leftElbowX;poseBones.leftElbow.rotation.z+=leftElbowZ;}
+  if(poseBones.rightElbow&&poseBase.rightElbow){poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX;poseBones.rightElbow.rotation.z+=rightElbowZ;}
+  if(poseBones.leftWrist&&poseBase.leftWrist){poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=Math.sin(t*.72)*.008+leftHandZ;}
+  if(poseBones.rightWrist&&poseBase.rightWrist){poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z-=Math.sin(t*.72)*.008+rightHandZ;}
+  }
+ }
+ camera.position.z=THREE.MathUtils.damp(camera.position.z,targetZoom,4,dt);camera.lookAt(0,vrm?Math.max(.7,camera.position.y*.82):camera.position.y*.64,0);renderer.render(scene,camera)
+}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
