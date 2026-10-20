@@ -4,13 +4,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Eva · Espacio 3D</title>
 <style>
-:root{--pink:#e88ab7;--ink:#392b3b;--glass:rgba(255,255,255,.88)}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c9ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}#stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.top{display:none!important;position:fixed;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}.brand{font-size:12px;font-weight:850;letter-spacing:.15em;color:#594454;background:var(--glass);padding:10px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c}.brand small{display:block;font-weight:600;letter-spacing:.05em;opacity:.65;margin-top:3px}.affinity{min-width:120px;background:var(--glass);padding:9px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c;font-size:13px;font-weight:700}.meter{height:5px;border-radius:8px;background:#e8dfe7;margin-top:7px;overflow:hidden}.meter span{display:block;height:100%;width:57%;background:linear-gradient(90deg,#e87fb3,#f4b5d3);transition:width .6s}.bottom{display:none!important}.dialog{background:rgba(255,255,255,.93);border:1px solid #f1e4ed;border-radius:20px;padding:14px 16px;box-shadow:0 8px 28px #7b5b7218;min-height:94px}.name{font-size:12px;font-weight:900;letter-spacing:.14em;color:#c65f96;margin-bottom:5px}.line{font-size:15px;line-height:1.4}.buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.buttons button,.filebtn{border:1px solid #ead7e5;border-radius:15px;background:linear-gradient(145deg,#fff,#fbf2f8);color:#573f53;padding:12px 5px;font-weight:750;font-size:12px;box-shadow:0 3px 10px #8c708018;min-height:48px}.buttons button:active,.filebtn:active{transform:scale(.98)}.filebtn{pointer-events:auto;display:inline-block;white-space:nowrap}.filebtn input{display:none}.hint{display:none!important;position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#ffffffd9;border:1px solid #f0e4ed;border-radius:99px;padding:8px 12px;font-size:11px;white-space:nowrap;color:#806b7c;pointer-events:none}.status{font-size:11px;color:#8d7889;margin-top:7px}.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:5;padding:28px;text-align:center}.loader.hidden{display:none}.loadcard{max-width:340px;border:1px solid #f0e2ed;border-radius:24px;padding:24px;background:#fff;box-shadow:0 12px 40px #b58aa21c}.loadcard h1{font-size:22px;margin:0 0 8px}.loadcard p{font-size:14px;line-height:1.5;color:#7e6a7a}.loadcard .filebtn{margin-top:8px;background:#f9e8f2}.tiny{font-size:11px!important;color:#9b8a99!important}.touch-reaction{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);max-width:min(88vw,420px);padding:12px 18px;border:1px solid #ffffffb8;border-radius:22px;background:rgba(255,255,255,.88);color:#483548;font-size:15px;font-weight:650;text-align:center;box-shadow:0 8px 28px #344b6222;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:4}.touch-reaction.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:700px){.top{left:24px;right:24px}.hint{top:88px}}
+:root{--pink:#e88ab7;--ink:#392b3b;--glass:rgba(255,255,255,.88)}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87c9ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}#stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.top{display:none!important;position:fixed;top:env(safe-area-inset-top,12px);left:14px;right:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}.brand{font-size:12px;font-weight:850;letter-spacing:.15em;color:#594454;background:var(--glass);padding:10px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c}.brand small{display:block;font-weight:600;letter-spacing:.05em;opacity:.65;margin-top:3px}.affinity{min-width:120px;background:var(--glass);padding:9px 12px;border-radius:15px;box-shadow:0 4px 20px #8c70801c;font-size:13px;font-weight:700}.meter{height:5px;border-radius:8px;background:#e8dfe7;margin-top:7px;overflow:hidden}.meter span{display:block;height:100%;width:57%;background:linear-gradient(90deg,#e87fb3,#f4b5d3);transition:width .6s}.bottom{display:none!important}.dialog{background:rgba(255,255,255,.93);border:1px solid #f1e4ed;border-radius:20px;padding:14px 16px;box-shadow:0 8px 28px #7b5b7218;min-height:94px}.name{font-size:12px;font-weight:900;letter-spacing:.14em;color:#c65f96;margin-bottom:5px}.line{font-size:15px;line-height:1.4}.buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.buttons button,.filebtn{border:1px solid #ead7e5;border-radius:15px;background:linear-gradient(145deg,#fff,#fbf2f8);color:#573f53;padding:12px 5px;font-weight:750;font-size:12px;box-shadow:0 3px 10px #8c708018;min-height:48px}.buttons button:active,.filebtn:active{transform:scale(.98)}.filebtn{pointer-events:auto;display:inline-block;white-space:nowrap}.filebtn input{display:none}.hint{display:none!important;position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#ffffffd9;border:1px solid #f0e4ed;border-radius:99px;padding:8px 12px;font-size:11px;white-space:nowrap;color:#806b7c;pointer-events:none}.status{font-size:11px;color:#8d7889;margin-top:7px}.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:5;padding:28px;text-align:center}.loader.hidden{display:none}.loadcard{max-width:340px;border:1px solid #f0e2ed;border-radius:24px;padding:24px;background:#fff;box-shadow:0 12px 40px #b58aa21c}.loadcard h1{font-size:22px;margin:0 0 8px}.loadcard p{font-size:14px;line-height:1.5;color:#7e6a7a}.loadcard .filebtn{margin-top:8px;background:#f9e8f2}.tiny{font-size:11px!important;color:#9b8a99!important}.touch-reaction{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);max-width:min(88vw,420px);padding:12px 18px;border:1px solid #ffffffb8;border-radius:22px;background:rgba(255,255,255,.88);color:#483548;font-size:15px;font-weight:650;text-align:center;box-shadow:0 8px 28px #344b6222;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:4}.touch-reaction.show{opacity:1;transform:translateX(-50%) translateY(0)}body:not(.light-mode) .touch-reaction{background:rgba(13,18,32,.88);border-color:rgba(221,190,255,.38);color:#f6e8ff;box-shadow:0 8px 28px rgba(0,0,0,.38)}
+#themeToggle{position:fixed;z-index:8;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;width:48px;height:48px;border:1px solid rgba(255,255,255,.32);border-radius:50%;background:rgba(12,18,34,.78);color:#f4d9ff;font-size:23px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:manipulation}#themeToggle:active{transform:scale(.94)}#themeToggle .theme-label{position:absolute;right:56px;white-space:nowrap;font-size:12px;font-weight:650;letter-spacing:.02em;padding:7px 10px;border-radius:12px;background:rgba(12,18,34,.78);color:#f4efff;border:1px solid rgba(255,255,255,.16)}body.light-mode #themeToggle{background:rgba(255,255,255,.88);color:#56465b;border-color:rgba(75,65,80,.2)}body.light-mode #themeToggle .theme-label{background:rgba(255,255,255,.9);color:#56465b;border-color:rgba(75,65,80,.16)}@media(min-width:700px){.top{left:24px;right:24px}.hint{top:88px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.2.0/lib/three-vrm.module.js","@pixiv/three-vrm-animation":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm-animation@3.2.0/lib/three-vrm-animation.module.js"}}</script>
 </head>
 <body>
 <div id="stage"></div>
+<button id="themeToggle" type="button" aria-label="Cambiar modo oscuro o claro" title="Cambiar iluminación"><span id="themeIcon">☀</span><span class="theme-label" id="themeLabel">Modo nocturno</span></button>
 <div class="top"><div class="brand">EVA · ESPACIO PERSONAL<small>TOCÁ EL MODELO · REACCIONES POR ZONA</small></div><div class="affinity">💗 Afinidad <span id="aff">57</span>%<div class="meter"><span id="bar"></span></div></div></div>
 <div class="hint">Tocá a Eva para que reaccione · Arrastrá para girar · Pellizcá para acercar</div><div id="touchReaction" class="touch-reaction" aria-live="polite"></div>
 <div class="bottom"><div class="dialog"><div class="name">EVA</div><div class="line" id="line">¿Q-qué mirás tanto? No es como si hubiera preparado este lugar para vos...</div><div class="status" id="status">Cargá tu modelo VRM para comenzar.</div></div><div class="buttons"><button data-action="compliment">💗 Elogiarla</button><button data-action="tease">😏 Coquetear</button><button data-action="tea">🍵 Ofrecer té</button><button data-action="flower">🌸 Ofrecer flor</button><button data-action="look">👀 Mirarla</button><button data-action="letter">💌 Carta</button></div></div>
@@ -22,38 +23,53 @@ import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import { VRMAnimationLoaderPlugin, VRMLookAtQuaternionProxy, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
 const stage=document.querySelector('#stage'), loaderScreen=document.querySelector('#loader');
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x78baf0);
-scene.fog=new THREE.Fog(0xa9d5f5,42,110);
+scene.background=new THREE.Color(0x080d1a);
+scene.fog=new THREE.Fog(0x0d1424,42,110);
 const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,100); camera.position.set(0,1.35,4.55);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.02; stage.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xeaf6ff,0x879bb3,1.15));
-const key=new THREE.DirectionalLight(0xfff8ed,1.35);key.position.set(-3,6,4);scene.add(key);
-const fill=new THREE.DirectionalLight(0xc5e4ff,.48);fill.position.set(4,3,2);scene.add(fill);
-const rim=new THREE.DirectionalLight(0xffffff,.55);rim.position.set(0,4,-4);scene.add(rim);
+const hemi=new THREE.HemisphereLight(0xeaf0ff,0x3a4057,.62);scene.add(hemi);
+const key=new THREE.DirectionalLight(0xffe6f2,.92);key.position.set(-3,6,4);scene.add(key);
+const fill=new THREE.DirectionalLight(0x9abaff,.32);fill.position.set(4,3,2);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xb9c9ff,.28);rim.position.set(0,4,-4);scene.add(rim);
 
 // Cielo azul y terraza de losas blancas, sin modificar el VRM.
 const skyDome=new THREE.Mesh(
  new THREE.SphereGeometry(90,40,24,0,Math.PI*2,0,Math.PI/2),
- new THREE.MeshBasicMaterial({color:0x78baf0,side:THREE.BackSide})
+ new THREE.MeshBasicMaterial({color:0x080d1a,side:THREE.BackSide})
 );
 skyDome.position.y=-1.2;scene.add(skyDome);
 // Textura procedural de losas: contraste suave, juntas visibles incluso en móvil.
-const tileCanvas=document.createElement('canvas');tileCanvas.width=128;tileCanvas.height=128;
-const tileCtx=tileCanvas.getContext('2d');
-tileCtx.fillStyle='#f8fbff';tileCtx.fillRect(0,0,128,128);
-tileCtx.fillStyle='#f1f5fa';tileCtx.fillRect(2,2,61,61);tileCtx.fillRect(66,66,60,60);
-tileCtx.strokeStyle='#c7d4e3';tileCtx.lineWidth=2;tileCtx.strokeRect(1,1,126,126);
-const tileTexture=new THREE.CanvasTexture(tileCanvas);tileTexture.wrapS=THREE.RepeatWrapping;tileTexture.wrapT=THREE.RepeatWrapping;tileTexture.repeat.set(125,125);tileTexture.colorSpace=THREE.SRGBColorSpace;
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),
- new THREE.MeshStandardMaterial({map:tileTexture,color:0xffffff,roughness:.82,metalness:0}));
+function makeTileTexture(dark){
+ const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');
+ ctx.fillStyle=dark?'#151b2b':'#f8fbff';ctx.fillRect(0,0,128,128);
+ ctx.fillStyle=dark?'#1c2436':'#f1f5fa';ctx.fillRect(2,2,61,61);ctx.fillRect(66,66,60,60);
+ ctx.strokeStyle=dark?'#303a50':'#c7d4e3';ctx.lineWidth=2;ctx.strokeRect(1,1,126,126);
+ const tex=new THREE.CanvasTexture(c);tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(125,125);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+}
+const lightTileTexture=makeTileTexture(false),darkTileTexture=makeTileTexture(true);
+const floorMaterial=new THREE.MeshStandardMaterial({map:darkTileTexture,color:0xffffff,roughness:.92,metalness:0});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),floorMaterial);
 floor.rotation.x=-Math.PI/2;floor.position.y=-.025;scene.add(floor);
 // Nubes decorativas lejanas, discretas para mantener visible a Frii.
-const cloudMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.23,depthWrite:false});
+const cloudMat=new THREE.MeshBasicMaterial({color:0xcbd5ff,transparent:true,opacity:.08,depthWrite:false});
 const clouds=new THREE.Group();
 for(const [x,y,z,sc] of [[-15,8,-42,.40],[-11,8.4,-43,.34],[-7,8.1,-44,.38],[12,8.8,-46,.39],[16,9.1,-47,.31],[8,8.5,-48,.30],[-20,10,-52,.36],[20,10.2,-54,.38]]){
  const g=new THREE.Group();for(const [px,py,pz,r] of [[0,0,0,.7],[.65,.12,0,.55],[-.62,.05,0,.48],[.15,.35,0,.48]]){const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,10),cloudMat);m.position.set(px,py,pz);g.add(m)}g.position.set(x,y,z);g.scale.setScalar(sc);clouds.add(g)
 }
 scene.add(clouds);
+// Modo nocturno pensado para pantallas móviles: reduce el resplandor del cielo y del suelo.
+let darkMode=true;
+const themeToggle=document.querySelector('#themeToggle'),themeIcon=document.querySelector('#themeIcon'),themeLabel=document.querySelector('#themeLabel');
+function applyTheme(dark){
+ darkMode=dark;document.body.classList.toggle('light-mode',!dark);
+ scene.background.set(dark?0x080d1a:0x78baf0);scene.fog.color.set(dark?0x0d1424:0xa9d5f5);skyDome.material.color.set(dark?0x080d1a:0x78baf0);
+ floorMaterial.map=dark?darkTileTexture:lightTileTexture;floorMaterial.needsUpdate=true;
+ hemi.intensity=dark?.62:1.15;key.intensity=dark?.92:1.35;fill.intensity=dark?.32:.48;rim.intensity=dark?.28:.55;
+ renderer.toneMappingExposure=dark?.82:1.02;cloudMat.opacity=dark?.08:.23;
+ themeIcon.textContent=dark?'☀':'☾';themeLabel.textContent=dark?'Modo claro':'Modo nocturno';
+ themeToggle.setAttribute('aria-label',dark?'Activar modo claro':'Activar modo nocturno');
+}
+themeToggle.addEventListener('click',()=>applyTheme(!darkMode));applyTheme(true);
 // Escenario exterior sencillo: cielo, nubes lejanas y terraza de losas blancas.
 let vrm=null, mixer=null, idleAction=null, poseBones={}, poseBase={}, animatedBase={}, clock=new THREE.Clock(), targetYaw=0, currentYaw=0, drag=false, lastX=0,lastY=0, zoom=4.1, targetZoom=4.1, affinity=57, mood='tsun', nextBlink=2.5, blink=0, expressions={}, reactionTime=4, reactionMood='idle', modelBaseY=0, modelBaseX=0;
 const fileInput=document.querySelector('#vrmfile'), status=document.querySelector('#status'), line=document.querySelector('#line');
