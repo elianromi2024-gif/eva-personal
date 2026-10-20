@@ -293,8 +293,8 @@ function animate(){
   if(poseBones.rightShoulder&&poseBase.rightShoulder){if(!mixer)poseBones.rightShoulder.rotation.copy(poseBase.rightShoulder);poseBones.rightShoulder.rotation.z+=-idleArm+rightShoulderZ;poseBones.rightShoulder.rotation.x+=Math.sin(t*.72)*.008+rightShoulderX;}
   if(poseBones.leftArm&&poseBase.leftArm){if(!mixer)poseBones.leftArm.rotation.copy(poseBase.leftArm);poseBones.leftArm.rotation.z+=Math.sin(t*.70)*.012+leftArmZ;poseBones.leftArm.rotation.x+=Math.sin(t*.9)*.008+leftArmX;}
   if(poseBones.rightArm&&poseBase.rightArm){if(!mixer)poseBones.rightArm.rotation.copy(poseBase.rightArm);poseBones.rightArm.rotation.z+=-Math.sin(t*.70)*.012+rightArmZ;poseBones.rightArm.rotation.x+=Math.sin(t*.9)*.008+rightArmX;}
-  if(poseBones.leftElbow&&poseBase.leftElbow){if(!mixer)poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=Math.sin(t*.68)*.006+leftElbowX+(motionMode===0?.10:motionMode===1?-.62:-.72);poseBones.leftElbow.rotation.z+=leftElbowZ+(shy*.18)+(proud*.16);}
-  if(poseBones.rightElbow&&poseBase.rightElbow){if(!mixer)poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX+(motionMode===0?.10:motionMode===1?-.62:-.72);poseBones.rightElbow.rotation.z+=rightElbowZ-(shy*.18)-(proud*.16);}
+  if(poseBones.leftElbow&&poseBase.leftElbow){if(!mixer)poseBones.leftElbow.rotation.copy(poseBase.leftElbow);poseBones.leftElbow.rotation.x+=Math.sin(t*.68)*.006+leftElbowX;poseBones.leftElbow.rotation.z+=leftElbowZ;}
+  if(poseBones.rightElbow&&poseBase.rightElbow){if(!mixer)poseBones.rightElbow.rotation.copy(poseBase.rightElbow);poseBones.rightElbow.rotation.x+=Math.sin(t*.68)*.006+rightElbowX;poseBones.rightElbow.rotation.z+=rightElbowZ;}
   if(poseBones.leftWrist&&poseBase.leftWrist){if(!mixer)poseBones.leftWrist.rotation.copy(poseBase.leftWrist);poseBones.leftWrist.rotation.z+=Math.sin(t*.72)*.008+leftHandZ;}
   if(poseBones.rightWrist&&poseBase.rightWrist){if(!mixer)poseBones.rightWrist.rotation.copy(poseBase.rightWrist);poseBones.rightWrist.rotation.z+=-Math.sin(t*.72)*.008+rightHandZ;}
  }
