@@ -171,12 +171,13 @@ function getTouchedBodyPart(e){
  const hits=touchRaycaster.intersectObject(vrm.scene,true);
  const hit=hits.find(h=>h.object?.isMesh && h.object.visible && h.point);
  if(!hit)return null;
+ // Solo reconocemos las zonas acordadas: cabeza, torso y cada brazo.
+ // La selección se basa en el punto 3D real tocado y los huesos del avatar.
  const groups=[
   ['head',['head','neck']],
   ['leftArm',['leftUpperArm','leftLowerArm','leftHand','leftShoulder']],
   ['rightArm',['rightUpperArm','rightLowerArm','rightHand','rightShoulder']],
-  ['torso',['upperChest','chest','spine','hips']],
-  ['legs',['leftUpperLeg','rightUpperLeg','leftLowerLeg','rightLowerLeg','leftFoot','rightFoot']]
+  ['torso',['upperChest','chest','spine','hips']]
  ];
  let best={distance:Infinity,part:null};
  for(const [part,names] of groups){
@@ -188,17 +189,19 @@ function getTouchedBodyPart(e){
    if(d<best.distance)best={distance:d,part};
   }
  }
- if(best.part)return best.part;
- // Fallback to the real 3D hit height, not fixed screen regions.
  const bounds=new THREE.Box3().setFromObject(vrm.scene);
  const h=Math.max(.01,bounds.max.y-bounds.min.y);
+ // Si el hueso cercano queda lejos, evitamos confundir las piernas con el torso.
+ if(best.part && best.distance<h*.24)return best.part;
  const rel=(hit.point.y-bounds.min.y)/h;
- return rel>.78?'head':rel>.48?'torso':rel>.25?'legs':'legs';
+ if(rel>.79)return 'head';
+ if(rel>.43)return 'torso';
+ return null;
 }
 function reactToModelTouch(e){
  const part=getTouchedBodyPart(e);
  console.info('Zona tocada en Eva:',part||'sin impacto');
- if(!part){showTouchReaction('Acercate un poquito y tocá a Eva directamente. 💗');return}
+ if(!part){showTouchReaction('Probá tocar mi cabeza, torso o alguno de mis brazos. 💗');return}
  if(part==='head'){setLine('¡E-eh! ¡En la cabeza no se toca sin avisar! ...¿Me despeinaste? 😳',2,'touchHead');showTouchReaction('Eva se sobresalta y ladea la cabeza. 😳');}
  else if(part==='leftArm'){setLine('¡Esa es mi mano! ...Podés saludarme, si querés. Hmph. 💗',2,'touchLeftArm');showTouchReaction('Eva mira tu mano y se mueve con timidez. 🌸');}
  else if(part==='rightArm'){setLine('¿Me tocaste el brazo? ¡Avisá antes! ...No dije que te alejaras. 😤',1,'touchRightArm');showTouchReaction('Eva aparta suavemente el brazo. 😳');}
@@ -239,11 +242,11 @@ function animate(){
   if(vrm.humanoid){
    const chest=vrm.humanoid.getNormalizedBoneNode('chest')||vrm.humanoid.getNormalizedBoneNode('spine');
    const chestBase=animatedBase.chest||animatedBase.spine;
-   if(chest&&chestBase){chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.55)*.045+chestX;chest.rotation.z+=Math.sin(t*.72)*.024+chestZ;}
+   if(chest&&chestBase){if(!mixer)chest.rotation.copy(chestBase);chest.rotation.x+=Math.sin(t*1.55)*.045+chestX;chest.rotation.z+=Math.sin(t*.72)*.024+chestZ;}
    const spine=vrm.humanoid.getNormalizedBoneNode('spine');
-   if(spine&&animatedBase.spine&&spine!==chest){spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.55)*.022+chestX*.35;spine.rotation.z+=Math.sin(t*.62)*.009+chestZ*.3;}
+   if(spine&&animatedBase.spine&&spine!==chest){if(!mixer)spine.rotation.copy(animatedBase.spine);spine.rotation.x+=Math.sin(t*1.55)*.022+chestX*.35;spine.rotation.z+=Math.sin(t*.62)*.009+chestZ*.3;}
    const head=vrm.humanoid.getNormalizedBoneNode('head');
-   if(head&&animatedBase.head){head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.82)*.035+headX;head.rotation.y+=Math.sin(t*.57)*.045+headY;head.rotation.z+=Math.sin(t*.68)*.028+headZ;}
+   if(head&&animatedBase.head){if(!mixer)head.rotation.copy(animatedBase.head);head.rotation.x+=Math.sin(t*.82)*.035+headX;head.rotation.y+=Math.sin(t*.57)*.045+headY;head.rotation.z+=Math.sin(t*.68)*.028+headZ;}
   }
   nextBlink-=dt;if(nextBlink<=0){blink=.001;nextBlink=2.1+Math.random()*2.7}if(blink>0){blink+=dt*5.5;if(blink>1)blink=0}
   const faceMood={happy:0,relaxed:0,angry:0,surprised:0};
