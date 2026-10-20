@@ -175,7 +175,7 @@ async function installVRMFromURL(url){
      idleAction.reset(); idleAction.play();
      // La animación de saludo se carga aparte; si falla, Eva sigue funcionando con Relax.
      try {
-       const waveGltf=await gltfLoader.loadAsync(new URL('Goodbye.vrma',window.location.href).href);
+       const waveGltf=await gltfLoader.loadAsync(new URL('./Goodbye.vrma?v=20261020b',document.baseURI).href);
        const waveAnimation=waveGltf.userData.vrmAnimations?.[0];
        if(!waveAnimation) throw new Error('Goodbye.vrma no contiene una animación VRMA reconocible.');
        const waveClip=createVRMAnimationClip(waveAnimation,vrm);
@@ -183,8 +183,9 @@ async function installVRMFromURL(url){
        waveToggle.disabled=false;
        console.info('Animación de saludo preparada:',waveClip.name,'duración:',waveClip.duration);
      } catch(waveError) {
-       console.warn('No se pudo cargar Goodbye.vrma; Relax seguirá funcionando.',waveError);
+       console.error('No se pudo cargar Goodbye.vrma; Relax seguirá funcionando.',waveError);
        waveToggle.disabled=true;waveToggle.textContent='👋 Sin saludo';
+       status.textContent='Eva está aquí, pero no pude cargar el saludo. Recargá la página; si sigue igual, revisamos el archivo.';
      }
      status.textContent=waveReady?'¡Eva está aquí! Tocá “Saludar” para verla hacer un gesto. 💗':'¡Eva está aquí! Animación Relax activada. 💗';
      console.info('Animación Relax activada:',clip.name,'duración:',clip.duration);
