@@ -19,7 +19,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
-import { VRMAnimationLoaderPlugin, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
+import { VRMAnimationLoaderPlugin, VRMLookAtQuaternionProxy, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
 const stage=document.querySelector('#stage'), loaderScreen=document.querySelector('#loader');
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x78baf0);
@@ -72,13 +72,17 @@ function smoothExpr(name,target,dt){if(!vrm?.expressionManager)return;let curren
 async function installVRMFromURL(url){
  status.textContent='Conectando con el modelo 3D…';
  const gltfLoader=new GLTFLoader();
+ gltfLoader.crossOrigin='anonymous';
  gltfLoader.register(parser=>new VRMLoaderPlugin(parser));
+ gltfLoader.register(parser=>new VRMAnimationLoaderPlugin(parser));
  try{
    const gltf=await gltfLoader.loadAsync(url);
    if(vrm){scene.remove(vrm.scene);VRMUtils.deepDispose(vrm.scene)}
    vrm=gltf.userData.vrm;
    if(!vrm) throw new Error('El archivo abrió, pero no contiene un VRM válido.');
    VRMUtils.rotateVRM0(vrm);scene.add(vrm.scene);vrm.scene.position.set(0,0,0);vrm.scene.rotation.y=Math.PI;
+   // El proxy permite que las animaciones VRMA que controlan la mirada se apliquen correctamente.
+   if(vrm.lookAt){const lookAtProxy=new VRMLookAtQuaternionProxy(vrm.lookAt);lookAtProxy.name='lookAtQuaternionProxy';vrm.scene.add(lookAtProxy);}
    const box=new THREE.Box3().setFromObject(vrm.scene), size=box.getSize(new THREE.Vector3());
    vrm.scene.position.y-=box.min.y;
    modelBaseY=vrm.scene.position.y;modelBaseX=vrm.scene.position.x;
@@ -102,22 +106,21 @@ async function installVRMFromURL(url){
    for(const name of ['chest','spine','head']) { const bone=vrm.humanoid?.getNormalizedBoneNode(name); if(bone) animatedBase[name]=bone.rotation.clone(); }
    // Cargamos la animación VRMA por separado para no alterar el archivo del avatar.
    try {
-     const animationLoader=new GLTFLoader();
-     animationLoader.register(parser=>new VRMAnimationLoaderPlugin(parser));
      const animURL=new URL('Relax.vrma',window.location.href).href;
-     const animGltf=await animationLoader.loadAsync(animURL);
+     console.info('Cargando animación VRMA:',animURL);
+     const animGltf=await gltfLoader.loadAsync(animURL);
      const vrmAnimation=animGltf.userData.vrmAnimations?.[0];
-     if(vrmAnimation) {
-       const clip=createVRMAnimationClip(vrmAnimation,vrm);
-       mixer=new THREE.AnimationMixer(vrm.scene);
-       idleAction=mixer.clipAction(clip); idleAction.play();
-       status.textContent='¡Eva está aquí! Animación Relax activada. 💗';
-     } else {
-       status.textContent='Eva cargó; no encontré una animación VRMA válida.';
-     }
+     if(!vrmAnimation) throw new Error('El archivo se descargó, pero no contiene vrmAnimations[0].');
+     const clip=createVRMAnimationClip(vrmAnimation,vrm);
+     mixer=new THREE.AnimationMixer(vrm.scene);
+     idleAction=mixer.clipAction(clip);
+     idleAction.reset(); idleAction.play();
+     status.textContent='¡Eva está aquí! Animación Relax activada. 💗';
+     console.info('Animación Relax activada:',clip.name,'duración:',clip.duration);
    } catch(animationError) {
-     console.warn('No se pudo cargar Relax.vrma:',animationError);
-     status.textContent='Eva cargó. Falta publicar Relax.vrma junto a index.html para activar la animación.';
+     console.error('No se pudo cargar/aplicar Relax.vrma:',animationError);
+     status.textContent='Eva cargó, pero Relax.vrma falló: '+(animationError?.message||animationError);
+     showTouchReaction('Eva cargó, pero falló Relax.vrma. Revisaremos el error.');
    }
    loaderScreen.classList.add('hidden');
  }catch(err){
